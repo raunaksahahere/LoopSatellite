@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.core.geo import haversine_km
 from app.services.detection import repository
 
 BAND_ORDER = {"high": 0, "medium": 1, "low": 2}
@@ -92,6 +93,51 @@ def queue(limit: int | None = None) -> list[dict[str, Any]]:
         )
     )
     return pending[:limit] if limit else pending
+
+
+def find_near(
+    lat: float,
+    lon: float,
+    radius_km: float,
+    **filters: object,
+) -> list[dict[str, Any]]:
+    """Anomalies within `radius_km` of a point, nearest first — the FAST path.
+
+    This reads results that were computed offline and answers in milliseconds.
+    It never touches Earth Engine, and it must not: the moment this function can
+    trigger a satellite pull, "ask about an area" stops being a question you can
+    answer live and becomes a job you have to wait minutes for.
+
+    Submitting a brand-new area to be processed is a different feature entirely —
+    see services/areas.py.
+    """
+    candidates = filter_anomalies(**filters) if filters else repository.anomalies()
+
+    near: list[dict[str, Any]] = []
+    for anomaly in candidates:
+        alat, alon = anomaly.get("centroid_lat"), anomaly.get("centroid_lon")
+        if alat is None or alon is None:
+            continue
+        distance = haversine_km(lat, lon, alat, alon)
+        if distance <= radius_km:
+            near.append({**anomaly, "distance_km": round(distance, 2)})
+
+    near.sort(key=lambda a: a["distance_km"])
+    return near
+
+
+def ponds_near(lat: float, lon: float, radius_km: float) -> list[dict[str, Any]]:
+    """Every pond within the radius, flagged or not — the denominator for a summary."""
+    out = []
+    for pond in repository.ponds():
+        plat, plon = pond.get("centroid_lat"), pond.get("centroid_lon")
+        if plat is None or plon is None:
+            continue
+        distance = haversine_km(lat, lon, plat, plon)
+        if distance <= radius_km:
+            out.append({**pond, "distance_km": round(distance, 2)})
+    out.sort(key=lambda p: p["distance_km"])
+    return out
 
 
 def summarise(anomaly: dict[str, Any]) -> str:

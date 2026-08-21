@@ -2,13 +2,70 @@
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # backend/app/core/config.py -> backend/app/core -> backend/app -> backend -> repo root
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_DIR.parent
 PRECOMPUTED_DIR = BACKEND_DIR / "precomputed"
+
+# libpq query parameters that asyncpg does not understand. Neon (and most hosted
+# Postgres consoles) hand you a URL containing these; asyncpg raises
+# `connect() got an unexpected keyword argument 'sslmode'` on them.
+_LIBPQ_ONLY_PARAMS = {
+    "sslmode",
+    "channel_binding",
+    "target_session_attrs",
+    "gssencmode",
+    "options",
+}
+
+
+def normalise_database_url(url: str | None) -> str | None:
+    """Make a pasted-from-the-console Postgres URL usable by the async engine.
+
+    Neon gives you:
+        postgresql://user:pw@host/db?sslmode=require&channel_binding=require
+
+    Two things are wrong with that here, and both fail at connect time rather
+    than at startup, so they are worth fixing once in one place:
+
+      1. No driver, so SQLAlchemy reaches for psycopg2 — which isn't installed,
+         and wouldn't be async if it were. We need `postgresql+asyncpg`.
+      2. `sslmode` / `channel_binding` are libpq spellings. asyncpg takes `ssl`.
+
+    Anyone can now paste the URL exactly as their provider printed it.
+    """
+    if not url:
+        return url
+
+    url = url.strip().strip("'\"")
+
+    # 1. Driver.
+    for prefix in ("postgresql://", "postgres://"):
+        if url.startswith(prefix):
+            url = "postgresql+asyncpg://" + url[len(prefix) :]
+            break
+
+    if "+asyncpg" not in url:
+        return url  # some other driver was named explicitly; leave it alone
+
+    # 2. Query parameters.
+    parts = urlsplit(url)
+    params = parse_qsl(parts.query, keep_blank_values=True)
+    kept = [(k, v) for k, v in params if k.lower() not in _LIBPQ_ONLY_PARAMS]
+    dropped = {k.lower(): v for k, v in params if k.lower() in _LIBPQ_ONLY_PARAMS}
+
+    # sslmode=require/verify-* all mean "encrypt this"; asyncpg spells it `ssl`.
+    if "ssl" not in {k.lower() for k, _ in kept}:
+        sslmode = dropped.get("sslmode")
+        if sslmode and sslmode != "disable":
+            kept.append(("ssl", "require"))
+
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(kept), parts.fragment))
 
 
 class Settings(BaseSettings):
@@ -20,7 +77,7 @@ class Settings(BaseSettings):
 
     # --- Database -------------------------------------------------------
     # Optional: the demo read path serves precomputed/ and does not need a DB.
-    # The DB backs officer verifications, which are the only writes in the MVP.
+    # Areas submitted at runtime do need one — see services/areas.py.
     database_url: str | None = None
 
     # --- LLM (OpenRouter) ----------------------------------------------
@@ -34,14 +91,31 @@ class Settings(BaseSettings):
     search_provider: str = "openrouter_online"  # openrouter_online | tavily | serper | none
     search_api_key: str | None = None
 
+    # --- Google Earth Engine (offline pipeline + the slow area path) -----
+    # Personal OAuth refresh token, not a service account. The whole contents of
+    # ~/.config/earthengine/credentials, as one line. See core/gee_auth.py.
+    earthengine_credentials_json: str | None = None
+    gee_project_id: str | None = None
+
     # --- Paths ----------------------------------------------------------
     precomputed_dir: Path = PRECOMPUTED_DIR
 
     # --- CORS -----------------------------------------------------------
-    cors_origins: list[str] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
+    # Comma-separated. The deployed frontend origin goes here. Never "*".
+    # Kept as a plain string, not list[str]: pydantic-settings JSON-decodes list
+    # fields inside the dotenv source, before any validator can normalise them,
+    # so `CORS_ORIGINS=a,b` in a .env raises SettingsError. Parsed by
+    # `cors_origin_list` below instead.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _fix_database_url(cls, value: str | None) -> str | None:
+        return normalise_database_url(value)
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def llm_configured(self) -> bool:
@@ -50,6 +124,10 @@ class Settings(BaseSettings):
     @property
     def db_configured(self) -> bool:
         return bool(self.database_url)
+
+    @property
+    def gee_configured(self) -> bool:
+        return bool(self.earthengine_credentials_json and self.gee_project_id)
 
 
 @lru_cache

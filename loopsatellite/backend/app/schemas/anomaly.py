@@ -40,6 +40,9 @@ class AnomalyOut(BaseModel):
     status: str = "pending"
     chip_url: str | None = None
     provenance: str | None = None
+    distance_km: float | None = Field(
+        None, description="Set only by radius queries: km from the point asked about"
+    )
 
 
 class DetectionExplanation(BaseModel):

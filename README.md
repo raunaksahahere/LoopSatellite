@@ -34,7 +34,74 @@ triggers an Earth Engine computation and never downloads anything.
 
 ---
 
+## Fast path and slow path are two different features
 
+Blurring them ruins both, so they are separate in the code and a tab apart in the UI.
+
+| | **Ask about an area** | **Monitor a new area** |
+|---|---|---|
+| The question | "what's going on around Haldia within 5 km?" | "start watching this circle" |
+| Cost | milliseconds | **minutes** |
+| Touches Earth Engine | never | yes |
+| Code | `services/llm/nl_query.py` → `stl_esd.find_near` | `services/areas.py` → `services/area_processing.py` |
+| Demo it live? | yes — this *is* the demo | **no** |
+
+The slow path is slow for a real reason: telling a filled-in pond apart from one
+that is simply between seasons needs about two years of history for that specific
+pond. No amount of engineering makes that instant, so the UI shows a status with
+an explanation rather than a spinner implying it is nearly done.
+
+**Before any demo, process the areas you might be asked about.** The fast path can
+only answer for places already measured — and when they haven't been, it says so
+plainly instead of reporting a false all-clear.
+
+---
+
+
+## Google Earth Engine, without a service account
+
+`earthengine authenticate` writes a personal OAuth refresh token to
+`~/.config/earthengine/credentials`. That whole file, on one line, goes into
+`EARTHENGINE_CREDENTIALS_JSON`; the project id goes into `GEE_PROJECT_ID`.
+
+
+**Know what this trades away.** The token carries a *person's* Google identity and
+a *person's* Earth Engine quota — every tile the service pulls is billed to them,
+it cannot be scoped down, and revoking their account breaks production. A service
+account remains the correct long-term answer. This is a deliberate short-term
+substitution, documented at the top of `backend/app/core/gee_auth.py`, and it
+should not outlive the hackathon.
+
+Only the slow path uses it. Nothing an officer asks about an existing area
+touches Earth Engine.
+
+---
+
+## Deployment
+
+Backend on Render, frontend on Vercel, database on Neon.
+
+```
+render.yaml               blueprint — Docker web service, health check, env var names
+backend/Dockerfile        python:3.12-slim + the [server] extra, RAG index baked in
+frontend/vercel.json      Vite build + SPA rewrite so /queue survives a refresh
+```
+
+Set the secrets in the Render dashboard (all are `sync: false`, so none is in the
+repository) and point `CORS_ORIGINS` at the Vercel URL — the allowlist is
+explicit, never `*`. On Vercel, set `VITE_API_BASE_URL` to the Render URL.
+
+Two things to know before relying on it:
+
+- **Render's free tier sleeps on inactivity**, which would kill an area-processing
+  job mid-flight; `render.yaml` asks for `starter` for that reason. If the slow
+  path ever becomes load-bearing, move it to a Background Worker with a real
+  queue rather than trusting the web process to stay awake.
+- **Neon's connection string works exactly as printed.** `config.py` rewrites the
+  driver to asyncpg and translates `sslmode` / `channel_binding`, which asyncpg
+  rejects outright.
+
+---
 
 ## Data — read this before demoing
 
@@ -91,9 +158,16 @@ Then four things a language model does, none of which can change the finding:
    **does not draft**. If the draft cites a provision that was not retrieved, the
    draft is discarded.
 3. **Natural-language query** — "which ponds in Ward 108 lost more than 20% and
-   never recovered". The model turns the sentence into a filter; the filter runs
-   in Python against the precomputed data; the map highlights the answer. The
-   model never sees a number, and the filter it produced is shown back to you.
+   never recovered", or "problems around Haldia within 5 km". The model turns the
+   sentence into a filter; the filter runs in Python against the precomputed data;
+   the map flies to the place, draws the radius, and highlights the answer. The
+   model never sees a number, never resolves a coordinate, and the filter it
+   produced is shown back to you.
+
+   Place names resolve against a **cached gazetteer**, built once from Nominatim
+   and committed to the repository. No geocoding call happens at request time — a
+   demo that reaches for the network is a demo that dies on conference wifi. A
+   place we do not have says so, and offers the ones we do.
 4. **Report writer** — fills six slots in a fixed template and hands off to a
    ReportLab PDF. Every figure in that PDF comes from the data, not the prose.
 
@@ -123,7 +197,7 @@ sp01-workspace/
     └── docs/architecture.md
 ```
 
-`docs/architecture.md` has the detector's internals, the JSONB-not-PostGIS
+`docs/architecture.md` has the detector's internals, the fast/slow split, the JSONB-not-PostGIS
 decision and its migration path, and what was deliberately left unbuilt.
 `THIRD_PARTY_NOTICES.md` scopes the GPL-3.0 obligation from EOWater to the one
 file that inherits it.
@@ -132,5 +206,5 @@ file that inherits it.
 
 PostgreSQL (Neon, geometries as GeoJSON in JSONB — no PostGIS) · FastAPI ·
 SQLAlchemy + Alembic · OpenRouter via the OpenAI SDK · React + Vite + TypeScript ·
-MapLibre GL · Recharts · ReportLab · Earth Engine + `geeup` + `statsmodels`
-(offline only).
+MapLibre GL · Recharts · ReportLab · Earth Engine (personal OAuth token) +
+`geeup` + `statsmodels` + `pyproj` · Nominatim (build time only) · Render + Vercel.

@@ -22,6 +22,64 @@ This is enforced three ways, not just documented:
    already exist in `precomputed/anomalies.json`. There is no code path by which
    a model produces, alters, or suppresses a finding.
 
+## Two paths, kept apart
+
+There are two features that both look like "tell me about this area", and the
+whole design depends on not confusing them.
+
+```
+FAST — a question about places already measured
+  NLQueryBar -> /api/llm/query -> nl_query.query()
+      gazetteer.resolve(place)      cached JSON, no network
+      stl_esd.find_near(lat, lon, r)  haversine over precomputed/
+  -> answer in milliseconds, no Earth Engine, deterministic summary
+
+SLOW — start monitoring somewhere new
+  LocationRadiusPicker -> POST /api/areas -> BackgroundTasks
+      geo.circle_polygon(...)          geodesic circle
+      area_processing: GEE -> JRC water bodies -> S2 MNDWI -> STL/ESD -> DB
+  -> minutes; status polled at GET /api/areas/{id}
+```
+
+The slow path is slow because the science is: STL needs roughly two years of
+history before "seasonal" means anything, and `_detect` refuses to flag anything
+on a series shorter than 24 months rather than guess. A submitted area therefore
+returns 202 and a job to poll, and the UI shows a status with an explanation
+instead of a spinner.
+
+`stl_esd.find_near` carries a comment saying it must never gain the ability to
+trigger a satellite pull, and a test asserts the fast path never initialises
+Earth Engine. That is the boundary; keep it.
+
+## Geometry, and why it is geodesic
+
+`app/core/geo.py`. A degree of longitude is ~103 km at Haldia and ~99 km at
+Siliguri, against 111 km for a degree of latitude. Offsetting lat and lon by the
+same number of degrees — the obvious implementation — gives a visibly egg-shaped
+"circle" that is ~8% too narrow in the north of the state. Since that polygon
+decides which Sentinel-2 tiles get pulled, it is worth getting right: we use
+`pyproj.Geod.fwd` on WGS84, with a spherical fallback if pyproj is missing.
+`tests/test_geo.py` asserts the east-west and north-south spans are equal, which
+is the property the naive version fails.
+
+The frontend has its own spherical `circlePolygon` for the live slider preview.
+It is a preview only — the authoritative geometry is always built server-side
+from the centre and radius that were submitted.
+
+## Place names
+
+`app/rag/gazetteer.py`. A cached JSON file, resolved once from Nominatim at build
+time (`python -m app.rag.gazetteer --refresh`) and committed. Lookup at request
+time is a dict hit plus `difflib` fuzzy matching — **no network call ever happens
+on a live request**, and a test breaks `httpx` to prove it.
+
+Unknown places return None. They do not fall back to a live geocode, and they do
+not guess coordinates; the response says which places we do have.
+
+Place parsing runs *after* ward and mouza have claimed their spans in the
+sentence. Without that, "ponds in Ward 108" reads "Ward" as a settlement name and
+the whole query collapses — a real regression, now covered by a test.
+
 ## The golden rule
 
 During a demo the API makes no Earth Engine call, downloads nothing, and computes
@@ -91,6 +149,25 @@ Bands: ≥0.70 high, ≥0.45 medium, else low. It is printed in
 `manifest.json` and re-derivable by hand from any anomaly record, which is the
 point — an officer can be told exactly why a case is ranked where it is.
 
+## The database, and when it started mattering
+
+Phase 1 needed no database: `precomputed/` served everything and verdicts went to
+a JSON file. That is still true of the read path, and deliberately so — the app
+boots from a clone with no credentials of any kind.
+
+Two things changed that. Officer verifications carry a foreign key to `anomaly`,
+so with a real `DATABASE_URL` set they fail unless the anomalies exist in
+Postgres too. And an open-ended set of user-submitted areas cannot live in a
+fixed set of files. Hence `python -m app.seed`: an idempotent upsert of
+`precomputed/` into `pond` / `observation` / `anomaly`. `precomputed/` remains the
+seed for the EKW demo; the database becomes the source of truth once there is one.
+
+`DATABASE_URL` is normalised in `config.py` rather than in the docs. Neon prints
+`postgresql://…?sslmode=require&channel_binding=require`; SQLAlchemy's async
+engine needs `postgresql+asyncpg://` and asyncpg rejects both of those libpq
+parameters. Both failures surface at connect time, not startup, so they are fixed
+once in one place and the console string can be pasted verbatim.
+
 ## Storage: GeoJSON in JSONB, not PostGIS
 
 Geometries live as GeoJSON objects inside `JSONB` columns. No PostGIS extension,
@@ -117,7 +194,7 @@ the only writes; without `DATABASE_URL` they go to a JSON file, and
 |---|---|---|
 | **Evidence corroboration** | Read search results, return structured findings with links and an explicit relevance verdict | Invent a source or URL; every finding must come from supplied results, and the response carries `searched: false` when nothing ran |
 | **Regulatory grounding + notice** | Fill a notice around provisions that were retrieved and quoted for it | Cite anything not retrieved — the draft is re-scanned afterwards and **discarded** if it names an un-retrieved provision. With no retrieval hit, `grounded: false` and no draft at all |
-| **Natural-language query** | Turn a sentence into a filter object | See or produce a number — the filter runs in Python against `precomputed/`, and the filter is shown back to the officer |
+| **Natural-language query** | Turn a sentence into a filter object, including a place name | See or produce a number, or resolve a coordinate — the filter runs in Python against `precomputed/`, place names resolve against the cached gazetteer, and the filter is shown back to the officer. The area summary is a format string, not model prose |
 | **Report writer** | Write prose for six named template slots | Choose the structure, or supply a figure — every number in the PDF comes from `facts`, and the prose is never parsed |
 
 All four go through one client (`app/services/llm/client.py`). No feature builds
@@ -153,6 +230,34 @@ present, one disclosure triangle away, in "How this was detected".
 Confidence is a colour-coded band ("High confidence" / "Needs a closer look"),
 never a decimal. The score is available as a tooltip.
 
+## Earth Engine authentication
+
+`app/core/gee_auth.py`. A personal OAuth refresh token from `earthengine
+authenticate`, held in one environment variable — not a service account.
+
+This is a knowing trade, not an oversight. The token is a person's identity and a
+person's quota, cannot be scoped down, and dies with their Google access. It is
+acceptable for a hackathon and not beyond one; the module docstring says so, and
+so does the README.
+
+`try_initialize()` is called at startup and never raises: Earth Engine being
+unreachable must not stop the API from booting, because everything except one
+button works without it. `/api/health` and `/api/areas/capability` report the real
+state so the UI can disable that button with a reason instead of failing on
+submit.
+
+## Shared detection code
+
+`app/services/detection/flagging.py` holds STL + Seasonal-Hybrid ESD as pure
+functions. Both callers import it: `data_pipeline/05_stl_esd_flagging.py` (the
+offline EKW run) and `services/area_processing.py` (a newly submitted area).
+
+It lives under `app/` because of dependency direction. The pipeline may depend on
+the application; the deployed application must not depend on the pipeline. The
+Docker image ships `app/` and not `data_pipeline/`, so an earlier version that
+loaded `05_stl_esd_flagging.py` by path worked locally and would have failed in
+production.
+
 ## Deliberately not built (MVP boundaries)
 
 - **Vision-model second opinion.** Extension point: `services/detection/conversion_classifier.py`.
@@ -164,3 +269,11 @@ never a decimal. The score is available as a tooltip.
   already carries the sensor.
 - **Upstream contribution to EOWater.** The vector `reduceRegions` path in
   `03_run_wsa_gee.js` is a genuine simplification for small polygon counts.
+- **A real queue for the slow path.** Area processing runs in-process via
+  FastAPI `BackgroundTasks`, which is why `render.yaml` asks for a plan that does
+  not sleep. A Background Worker plus a queue is the right shape once this
+  carries load.
+- **A live run of the area pipeline.** The orchestration, the status lifecycle
+  and the failure paths are tested with Earth Engine mocked; the `_gee_*`
+  functions themselves have never been executed against live GEE. Give them a
+  supervised first run well before you need them.

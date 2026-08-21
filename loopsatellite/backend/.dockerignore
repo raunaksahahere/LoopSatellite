@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+tests/
+var/
+# The offline pipeline never runs on the server. The statistics it uses live in
+# app/services/detection/flagging.py, which IS shipped — nothing at runtime
+# reaches into this directory.
+data_pipeline/
+.env

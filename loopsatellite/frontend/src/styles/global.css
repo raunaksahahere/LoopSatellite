@@ -491,3 +491,35 @@ pre.draft {
   overflow: hidden; clip: rect(0 0 0 0);
   white-space: nowrap; border: 0;
 }
+
+/* ------------------------------------------------------------ mode switch */
+/* Ask vs monitor: a question you can answer now, or a job that takes minutes.
+   Kept a tab apart, not a button apart — confusing the two wastes the officer's
+   time in one direction and their patience in the other. */
+.modeswitch {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.modeswitch__tab {
+  flex: 1;
+  min-height: 42px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.modeswitch__tab:hover { background: var(--surface-2); color: var(--ink); }
+.modeswitch__tab[aria-selected='true'] { background: var(--accent-soft); color: var(--accent); }
+.modeswitch__tab:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+input[type='range'] { accent-color: var(--accent); }

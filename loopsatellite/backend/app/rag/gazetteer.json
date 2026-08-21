@@ -1,0 +1,156 @@
+{
+ "source": "OpenStreetMap / Nominatim, © OpenStreetMap contributors (ODbL)",
+ "note": "Resolved at build time. The running service never calls Nominatim.",
+ "places": [
+  {
+   "name": "Asansol",
+   "query": "Asansol, West Bengal, India",
+   "lat": 23.6871297,
+   "lon": 86.9746587,
+   "display_name": "Asansol, Asansol Kulti Township, Paschim Bardhaman, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 22826418,
+   "source": "nominatim"
+  },
+  {
+   "name": "Barasat",
+   "query": "Barasat, West Bengal, India",
+   "lat": 22.7191072,
+   "lon": 88.4826229,
+   "display_name": "Barasat, Kolkata Metropolitan Area, Barasat - I, North 24 Parganas, West Bengal, 700124, India",
+   "osm_type": "node",
+   "osm_id": 570086096,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bardhaman",
+   "query": "Bardhaman, West Bengal, India",
+   "lat": 23.2495714,
+   "lon": 87.8681751,
+   "display_name": "Bardhaman, Burdwan - I, Purba Bardhaman, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 392451091,
+   "source": "nominatim"
+  },
+  {
+   "name": "Canning",
+   "query": "Canning, West Bengal, India",
+   "lat": 22.310373,
+   "lon": 88.6578971,
+   "display_name": "Canning, Canning - I, South 24 Parganas, West Bengal, 743329, India",
+   "osm_type": "way",
+   "osm_id": 1141917266,
+   "source": "nominatim"
+  },
+  {
+   "name": "Diamond Harbour",
+   "query": "Diamond Harbour, West Bengal, India",
+   "lat": 22.1926886,
+   "lon": 88.1894879,
+   "display_name": "Diamond Harbour, Diamond Harbour - I, South 24 Parganas, West Bengal, 743331, India",
+   "osm_type": "way",
+   "osm_id": 1138299886,
+   "source": "nominatim"
+  },
+  {
+   "name": "Digha",
+   "query": "Digha, West Bengal, India",
+   "lat": 21.623077,
+   "lon": 87.5082534,
+   "display_name": "Digha, Digha Contai Road, Old Digha, Digha, Ramnagar-I, Purba Medinipur, West Bengal, 721428, India",
+   "osm_type": "node",
+   "osm_id": 3826724096,
+   "source": "nominatim"
+  },
+  {
+   "name": "Durgapur",
+   "query": "Durgapur, West Bengal, India",
+   "lat": 23.5350475,
+   "lon": 87.3380425,
+   "display_name": "Durgapur, Faridpur Durgapur, Paschim Bardhaman, West Bengal, 713200, India",
+   "osm_type": "node",
+   "osm_id": 813334049,
+   "source": "nominatim"
+  },
+  {
+   "name": "East Kolkata Wetlands",
+   "query": "East Kolkata Wetlands, West Bengal, India",
+   "lat": 22.5363359,
+   "lon": 88.4390387,
+   "display_name": "East Kolkata Wetlands, Bidhannagar, Kolkata Metropolitan Area, Rajarhat, North 24 Parganas, West Bengal, 700100, India",
+   "osm_type": "node",
+   "osm_id": 11260040607,
+   "source": "nominatim"
+  },
+  {
+   "name": "Haldia",
+   "query": "Haldia, West Bengal, India",
+   "lat": 22.028124,
+   "lon": 88.0632655,
+   "display_name": "Haldia, Purba Medinipur, West Bengal, 721604, India",
+   "osm_type": "node",
+   "osm_id": 733558709,
+   "source": "nominatim"
+  },
+  {
+   "name": "Howrah",
+   "query": "Howrah, West Bengal, India",
+   "lat": 22.5736296,
+   "lon": 88.3251045,
+   "display_name": "Howrah, Kolkata Metropolitan Area, Howrah, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10371828,
+   "source": "nominatim"
+  },
+  {
+   "name": "Kharagpur",
+   "query": "Kharagpur, West Bengal, India",
+   "lat": 22.34309,
+   "lon": 87.3012875,
+   "display_name": "Kharagpur, Kharagpur-I, Paschim Medinipur, West Bengal, 721301, India",
+   "osm_type": "node",
+   "osm_id": 245704314,
+   "source": "nominatim"
+  },
+  {
+   "name": "Kolkata",
+   "query": "Kolkata, West Bengal, India",
+   "lat": 22.5726459,
+   "lon": 88.3638953,
+   "display_name": "Kolkata, Kolkata Metropolitan Area, Kolkata, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 9381363,
+   "source": "nominatim"
+  },
+  {
+   "name": "Krishnanagar",
+   "query": "Krishnanagar, West Bengal, India",
+   "lat": 23.4058481,
+   "lon": 88.4958935,
+   "display_name": "Krishnanagar, Krishnagar-I, Nadia, West Bengal, 741101, India",
+   "osm_type": "node",
+   "osm_id": 245713604,
+   "source": "nominatim"
+  },
+  {
+   "name": "Malda",
+   "query": "Malda, West Bengal, India",
+   "lat": 25.0057449,
+   "lon": 88.1398483,
+   "display_name": "Malda, English Bazar, Maldah, West Bengal, 732101, India",
+   "osm_type": "node",
+   "osm_id": 245728426,
+   "source": "nominatim"
+  },
+  {
+   "name": "Siliguri",
+   "query": "Siliguri, West Bengal, India",
+   "lat": 26.7164127,
+   "lon": 88.4309916,
+   "display_name": "Siliguri, Matigara block, Darjeeling, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 22826546,
+   "source": "nominatim"
+  }
+ ]
+}

@@ -1,6 +1,8 @@
 import type {
   Anomaly,
   AnomalyDetail,
+  Area,
+  AreaCapability,
   EvidenceResponse,
   Health,
   NLQueryResponse,
@@ -109,6 +111,22 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ question }),
     }),
+
+  // --- Areas: the SLOW path. Submitting one starts a job, it does not answer
+  // a question. Asking questions is `ask` above and returns in milliseconds.
+  areaCapability: () => request<AreaCapability>('/api/areas/capability'),
+
+  areas: (limit = 50) => request<{ count: number; items: Area[] }>(`/api/areas?limit=${limit}`),
+
+  area: (id: string) => request<Area>(`/api/areas/${encodeURIComponent(id)}`),
+
+  submitArea: (body: {
+    name: string
+    lat: number
+    lon: number
+    radius_km: number
+    requested_by?: string
+  }) => request<Area>('/api/areas', { method: 'POST', body: JSON.stringify(body) }),
 
   reportPdfUrl: (params: {
     scope: 'anomaly' | 'ward' | 'all'

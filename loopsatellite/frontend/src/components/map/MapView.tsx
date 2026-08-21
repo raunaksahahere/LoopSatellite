@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Map, { Layer, NavigationControl, Popup, ScaleControl, Source } from 'react-map-gl/maplibre'
-import type { MapLayerMouseEvent } from 'react-map-gl/maplibre'
+import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+import { circlePolygon, zoomForRadius } from '../../lib/geo'
 import type { PondCollection, PondProperties } from '../../lib/types'
 import { PondPopup } from './PondMarker'
 
@@ -52,15 +53,36 @@ const FILL_COLOR: unknown[] = [
   /* no anomaly */ '#2b7fb8',
 ]
 
+export interface Circle {
+  lat: number
+  lon: number
+  radiusKm: number
+}
+
 interface Props {
   ponds: PondCollection
   /** Pond ids to emphasise — e.g. the result of a natural-language query. */
   highlighted?: string[]
   onSelect?: (pondId: string) => void
   interactive?: boolean
+  /** Radius overlay: either the area being picked, or the area just asked about. */
+  circle?: Circle | null
+  /** When set, clicking empty map picks a centre point instead of doing nothing. */
+  onPickPoint?: (lat: number, lon: number) => void
+  /** Pan and zoom to fit this circle when it changes. */
+  focus?: Circle | null
 }
 
-export function MapView({ ponds, highlighted, onSelect, interactive = true }: Props) {
+export function MapView({
+  ponds,
+  highlighted,
+  onSelect,
+  interactive = true,
+  circle,
+  onPickPoint,
+  focus,
+}: Props) {
+  const mapRef = useRef<MapRef | null>(null)
   const [popup, setPopup] = useState<{ lon: number; lat: number; props: PondProperties } | null>(
     null,
   )
@@ -83,10 +105,26 @@ export function MapView({ ponds, highlighted, onSelect, interactive = true }: Pr
 
   const dimmed = Boolean(highlighted?.length)
 
+  const circleFeature = useMemo(
+    () => (circle ? circlePolygon(circle.lon, circle.lat, circle.radiusKm) : null),
+    [circle],
+  )
+
+  useEffect(() => {
+    if (!focus || !mapRef.current) return
+    mapRef.current.easeTo({
+      center: [focus.lon, focus.lat],
+      zoom: zoomForRadius(focus.radiusKm),
+      duration: 900,
+    })
+  }, [focus])
+
   function handleClick(event: MapLayerMouseEvent) {
     const feature = event.features?.[0]
     if (!feature) {
       setPopup(null)
+      // Empty map is a place to pick a centre point, when someone is picking one.
+      onPickPoint?.(event.lngLat.lat, event.lngLat.lng)
       return
     }
     const props = feature.properties as unknown as PondProperties
@@ -95,6 +133,7 @@ export function MapView({ ponds, highlighted, onSelect, interactive = true }: Pr
 
   return (
     <Map
+      ref={mapRef}
       initialViewState={INITIAL_VIEW}
       mapStyle={styleUrl ?? (FALLBACK_STYLE as never)}
       interactive={interactive}
@@ -127,6 +166,25 @@ export function MapView({ ponds, highlighted, onSelect, interactive = true }: Pr
           }}
         />
       </Source>
+
+      {circleFeature && (
+        <Source id="radius" type="geojson" data={circleFeature as never}>
+          <Layer
+            id="radius-fill"
+            type="fill"
+            paint={{ 'fill-color': '#0f6f6c', 'fill-opacity': 0.08 }}
+          />
+          <Layer
+            id="radius-outline"
+            type="line"
+            paint={{
+              'line-color': '#0f6f6c',
+              'line-width': 2,
+              'line-dasharray': [3, 2],
+            }}
+          />
+        </Source>
+      )}
 
       {popup && (
         <Popup

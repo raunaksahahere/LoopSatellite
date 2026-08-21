@@ -96,6 +96,8 @@ class ParsedFilter(BaseModel):
     """The structured filter the LLM produced. Shown to the officer verbatim,
     so they can see exactly how their sentence was interpreted."""
 
+    place: str | None = Field(None, description="Place name as the officer wrote it")
+    radius_km: float | None = None
     ward: str | None = None
     mouza: str | None = None
     min_loss_pct: float | None = None
@@ -108,6 +110,16 @@ class ParsedFilter(BaseModel):
     until: str | None = None
 
 
+class ResolvedPlace(BaseModel):
+    """A place from the cached gazetteer. Resolved offline, never at request time."""
+
+    name: str
+    lat: float
+    lon: float
+    display_name: str
+    source: str = "nominatim"
+
+
 class NLQueryResponse(BaseModel):
     question: str
     filter: ParsedFilter
@@ -117,6 +129,27 @@ class NLQueryResponse(BaseModel):
     unparsed: list[str] = Field(
         default_factory=list,
         description="Parts of the question the filter could not represent",
+    )
+
+    # --- present only when the question named a place -----------------------
+    place: ResolvedPlace | None = Field(
+        None, description="Null when the place could not be resolved"
+    )
+    place_query: str | None = Field(None, description="What the officer actually typed")
+    resolved: bool | None = Field(
+        None, description="False when a place was named but is not in the gazetteer"
+    )
+    radius_km: float | None = None
+    assumed_radius: bool | None = Field(
+        None, description="True when no distance was given and a default was used"
+    )
+    monitored_pond_count: int | None = Field(
+        None, description="Water bodies in range that are monitored at all — the denominator"
+    )
+    summary: str | None = Field(
+        None,
+        description="Deterministic plain-language answer. Composed from the numbers, "
+        "never written by a model.",
     )
 
 

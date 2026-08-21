@@ -19,8 +19,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import anomalies, llm, ponds, reports, verification_queue
+from app.api.routes import anomalies, areas, llm, ponds, reports, verification_queue
 from app.core.config import settings
+from app.core.gee_auth import status as gee_status
+from app.core.gee_auth import try_initialize
+from app.rag import gazetteer
 from app.services import verifications
 from app.services.detection import repository
 from app.services.llm import client
@@ -46,7 +49,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origin_list,
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
@@ -54,6 +57,7 @@ app.add_middleware(
 )
 
 app.include_router(ponds.router)
+app.include_router(areas.router)
 app.include_router(anomalies.router)
 app.include_router(verification_queue.router)
 app.include_router(reports.router)
@@ -100,6 +104,8 @@ def health() -> dict[str, Any]:
         "status": "ok" if data.get("precomputed") else "degraded",
         "data": data,
         "llm": client.status(),
+        "earth_engine": gee_status(),
+        "gazetteer": {"places": len(gazetteer.names()), "names": gazetteer.names()},
         "verification_storage": verifications.backend(),
     }
 
@@ -110,6 +116,9 @@ def manifest() -> dict[str, Any]:
 
 
 def _log_startup() -> None:
+    # Earth Engine is only needed by the slow path. Failing to reach it must not
+    # stop the API booting — everything else works without it.
+    try_initialize()
     try:
         m = repository.manifest()
         logger.info(

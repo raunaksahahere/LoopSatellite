@@ -1,0 +1,42 @@
+# Render blueprint. Deploy with: New > Blueprint > point at this repository.
+#
+# Secrets are NOT in this file. Set them in the Render dashboard:
+#   DATABASE_URL                 Neon connection string, pasted as Neon prints it
+#   OPENROUTER_API_KEY           OpenRouter key
+#   OPENROUTER_MODEL             e.g. anthropic/claude-sonnet-4.5
+#   EARTHENGINE_CREDENTIALS_JSON whole ~/.config/earthengine/credentials, one line
+#   GEE_PROJECT_ID               your Earth Engine cloud project
+#   CORS_ORIGINS                 the Vercel URL, e.g. https://loopsatellite.vercel.app
+services:
+  - type: web
+    name: loopsatellite-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    plan: starter
+    envVars:
+      - key: OPENROUTER_APP_NAME
+        value: LoopSatellite
+      - key: SEARCH_PROVIDER
+        value: openrouter_online
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        sync: false
+      - key: OPENROUTER_SITE_URL
+        sync: false
+      - key: EARTHENGINE_CREDENTIALS_JSON
+        sync: false
+      - key: GEE_PROJECT_ID
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+# NOTE on the slow path: `POST /api/areas` runs its job inside this web service
+# via FastAPI BackgroundTasks. Render's free tier sleeps on inactivity and would
+# kill a job mid-flight; `starter` above does not sleep. If area processing ever
+# becomes load-bearing, move it to a Background Worker with a queue rather than
+# relying on the web process staying alive.

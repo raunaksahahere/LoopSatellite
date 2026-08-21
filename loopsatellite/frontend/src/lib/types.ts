@@ -58,6 +58,8 @@ export interface Anomaly {
   status: string
   chip_url: string | null
   provenance: string | null
+  /** Set only by radius queries. */
+  distance_km?: number | null
   summary?: string
   reviewed_at?: string
   reviewed_by?: string | null
@@ -142,6 +144,14 @@ export interface Health {
     search_provider: string
     search_configured: boolean
   }
+  earth_engine?: {
+    configured: boolean
+    initialised: boolean
+    project: string | null
+    auth_method: string
+    error: string | null
+  }
+  gazetteer?: { places: number; names: string[] }
   verification_storage: string
 }
 
@@ -182,6 +192,8 @@ export interface NoticeResponse {
 }
 
 export interface ParsedFilter {
+  place?: string | null
+  radius_km?: number | null
   ward?: string | null
   mouza?: string | null
   min_loss_pct?: number | null
@@ -194,6 +206,14 @@ export interface ParsedFilter {
   until?: string | null
 }
 
+export interface ResolvedPlace {
+  name: string
+  lat: number
+  lon: number
+  display_name: string
+  source: string
+}
+
 export interface NLQueryResponse {
   question: string
   filter: ParsedFilter
@@ -201,4 +221,49 @@ export interface NLQueryResponse {
   results: Anomaly[]
   count: number
   unparsed: string[]
+  /** Present only when the question named a place. */
+  place?: ResolvedPlace | null
+  place_query?: string | null
+  resolved?: boolean | null
+  radius_km?: number | null
+  assumed_radius?: boolean | null
+  monitored_pond_count?: number | null
+  /** Deterministic plain-language answer — composed from numbers, not written by a model. */
+  summary?: string | null
+}
+
+export type AreaStatus = 'pending' | 'processing' | 'ready' | 'failed'
+
+export interface Area {
+  id: string
+  name: string
+  center_lat: number
+  center_lon: number
+  radius_km: number
+  geojson: Geometry
+  status: AreaStatus
+  progress: string | null
+  error: string | null
+  pond_count: number
+  anomaly_count: number
+  requested_by: string | null
+  created_at: string
+  updated_at: string
+  ready_at: string | null
+  headline: string
+  eta_note: string | null
+}
+
+export interface AreaCapability {
+  can_submit: boolean
+  reason: string | null
+  earth_engine: {
+    configured: boolean
+    initialised: boolean
+    project: string | null
+    auth_method: string
+    error: string | null
+  }
+  typical_duration: string
+  why_slow: string
 }

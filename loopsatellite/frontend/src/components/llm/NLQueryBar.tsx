@@ -6,9 +6,10 @@ import type { NLQueryResponse } from '../../lib/types'
 import { Note } from '../ui'
 
 const EXAMPLES = [
+  'problems around the East Kolkata Wetlands within 5 km',
   'ponds in Ward 108 that lost more than 20% and never recovered',
   'high-confidence losses where buildings are visible',
-  'Chowbaga ponds that lost over 40 percent since 2024',
+  'what is going on around Haldia for 5km',
 ]
 
 /**
@@ -83,10 +84,31 @@ export function NLQueryBar({ onResult }: { onResult: (result: NLQueryResponse | 
 
       {data && (
         <div style={{ marginTop: '0.85rem' }} aria-live="polite">
-          <Note tone="info">
-            <strong>{data.count}</strong> {data.count === 1 ? 'event' : 'events'} —{' '}
-            {data.interpretation}
-          </Note>
+          {/* The answer, when the question was about a place. Composed from the
+              numbers by a format string — never written by the model. */}
+          {data.summary ? (
+            <Note tone={data.count ? 'info' : 'warn'}>{data.summary}</Note>
+          ) : (
+            <Note tone={data.resolved === false ? 'warn' : 'info'}>
+              {data.resolved === false ? (
+                data.interpretation
+              ) : (
+                <>
+                  <strong>{data.count}</strong> {data.count === 1 ? 'event' : 'events'} —{' '}
+                  {data.interpretation}
+                </>
+              )}
+            </Note>
+          )}
+
+          {data.place && (
+            <p className="hint" style={{ margin: '0.5rem 0 0' }}>
+              Centred on {data.place.display_name}
+              {data.assumed_radius
+                ? ` · no distance given, so we looked within ${data.radius_km} km`
+                : ''}
+            </p>
+          )}
 
           {data.unparsed.length > 0 && (
             <ul className="reasons" style={{ marginTop: '0.6rem' }}>

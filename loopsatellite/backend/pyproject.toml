@@ -16,16 +16,26 @@ dependencies = [
     "openai>=1.40",
     "reportlab>=4.2",
     "python-dotenv>=1.0",
+    # Geodesic circles for radius search. app/core/geo.py has a spherical
+    # fallback if this is missing, but the ellipsoid is the correct answer.
+    "pyproj>=3.6",
 ]
 
 [project.optional-dependencies]
-# Offline satellite pipeline only — the live API never imports these.
-pipeline = [
+# What a deployed server needs BEYOND the read path: the slow "process a new
+# area" job runs detection in-process and calls Earth Engine.
+# The fast path — the map, the queue, reports, and every question an officer can
+# ask — needs none of this.
+server = [
     "numpy>=1.26",
-    "pandas>=2.2",
     "scipy>=1.13",
     "statsmodels>=0.14",
     "earthengine-api>=1.0",
+]
+# The full offline pipeline, run from a developer machine. Never on the server.
+pipeline = [
+    "loopsatellite-backend[server]",
+    "pandas>=2.2",
     "geeup>=0.5",
     "shapely>=2.0",
 ]
