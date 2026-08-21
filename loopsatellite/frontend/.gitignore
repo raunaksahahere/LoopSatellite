@@ -1,0 +1,29 @@
+# --- Secrets ----------------------------------------------------------------
+# Everything in a VITE_-prefixed variable is inlined into the client bundle and
+# is therefore public by construction — but the file still stays out of git.
+.env
+.env.*
+!.env.example
+*.local
+
+# --- Dependencies -----------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+# package-lock.json IS tracked — it is what makes an install reproducible.
+
+# --- Build output -----------------------------------------------------------
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# --- Tool caches ------------------------------------------------------------
+.vite/
+vite.config.ts.timestamp-*
+.eslintcache
+
+# --- Test / capture output --------------------------------------------------
+playwright-report/
+test-results/
+coverage/
+screenshots/

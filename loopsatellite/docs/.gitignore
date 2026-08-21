@@ -1,0 +1,19 @@
+# The sources in here ARE the deliverable — architecture.md and the pitch
+# material stay tracked. Only generated and transient files are ignored.
+
+# --- Static-site / doc-builder output ---------------------------------------
+_site/
+_build/
+.docusaurus/
+site/
+
+# --- Office and design tool lock files --------------------------------------
+~$*
+.~lock.*#
+*.tmp
+
+# --- Large exports ----------------------------------------------------------
+# Rendered video walkthroughs. Keep the recording; host it somewhere that is not
+# a git repository.
+*.mp4
+*.mov

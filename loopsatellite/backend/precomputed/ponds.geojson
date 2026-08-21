@@ -1,0 +1,1728 @@
+{
+ "type": "FeatureCollection",
+ "name": "ekw_ponds",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00001",
+    "name": "Chowbaga bheri 01",
+    "mouza": "Chowbaga",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.411113,
+    "centroid_lat": 22.478308,
+    "polygon_area_m2": 1114921.6,
+    "baseline_area_m2": 1114921.6
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.404294,
+       22.474732
+      ],
+      [
+       88.417931,
+       22.474732
+      ],
+      [
+       88.417931,
+       22.481884
+      ],
+      [
+       88.404294,
+       22.481884
+      ],
+      [
+       88.404294,
+       22.474732
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00002",
+    "name": "Nalban bheri 02",
+    "mouza": "Nalban",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.424502,
+    "centroid_lat": 22.477774,
+    "polygon_area_m2": 1001897.7,
+    "baseline_area_m2": 1001897.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.419295,
+       22.473566
+      ],
+      [
+       88.429709,
+       22.473566
+      ],
+      [
+       88.429709,
+       22.481982
+      ],
+      [
+       88.419295,
+       22.481982
+      ],
+      [
+       88.419295,
+       22.473566
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00003",
+    "name": "Kheyadaha bheri 03",
+    "mouza": "Kheyadaha",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.441196,
+    "centroid_lat": 22.481133,
+    "polygon_area_m2": 1160130.6,
+    "baseline_area_m2": 1160130.6
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.436526,
+       22.4757
+      ],
+      [
+       88.445866,
+       22.4757
+      ],
+      [
+       88.445866,
+       22.486566
+      ],
+      [
+       88.436526,
+       22.486566
+      ],
+      [
+       88.436526,
+       22.4757
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00004",
+    "name": "Bantala bheri 04",
+    "mouza": "Bantala",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.459863,
+    "centroid_lat": 22.481515,
+    "polygon_area_m2": 1429133.7,
+    "baseline_area_m2": 1429133.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.453026,
+       22.476943
+      ],
+      [
+       88.4667,
+       22.476943
+      ],
+      [
+       88.4667,
+       22.486086
+      ],
+      [
+       88.453026,
+       22.486086
+      ],
+      [
+       88.453026,
+       22.476943
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00005",
+    "name": "Karaidanga bheri 05",
+    "mouza": "Karaidanga",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.476951,
+    "centroid_lat": 22.480294,
+    "polygon_area_m2": 1323469.9,
+    "baseline_area_m2": 1323469.9
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.472116,
+       22.474307
+      ],
+      [
+       88.481785,
+       22.474307
+      ],
+      [
+       88.481785,
+       22.486281
+      ],
+      [
+       88.472116,
+       22.486281
+      ],
+      [
+       88.472116,
+       22.474307
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00006",
+    "name": "Kulberia bheri 06",
+    "mouza": "Kulberia",
+    "ward": "Bhangar-II",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.495339,
+    "centroid_lat": 22.4771,
+    "polygon_area_m2": 1268342.4,
+    "baseline_area_m2": 1268342.4
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.489126,
+       22.472635
+      ],
+      [
+       88.501552,
+       22.472635
+      ],
+      [
+       88.501552,
+       22.481564
+      ],
+      [
+       88.489126,
+       22.481564
+      ],
+      [
+       88.489126,
+       22.472635
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00007",
+    "name": "Bamanghata bheri 07",
+    "mouza": "Bamanghata",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.513118,
+    "centroid_lat": 22.47686,
+    "polygon_area_m2": 1129529.0,
+    "baseline_area_m2": 1129529.0
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.509096,
+       22.470717
+      ],
+      [
+       88.517139,
+       22.470717
+      ],
+      [
+       88.517139,
+       22.483002
+      ],
+      [
+       88.509096,
+       22.483002
+      ],
+      [
+       88.509096,
+       22.470717
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00008",
+    "name": "Tardaha bheri 08",
+    "mouza": "Tardaha",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.407071,
+    "centroid_lat": 22.501031,
+    "polygon_area_m2": 946087.8,
+    "baseline_area_m2": 946087.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.401297,
+       22.497447
+      ],
+      [
+       88.412845,
+       22.497447
+      ],
+      [
+       88.412845,
+       22.504615
+      ],
+      [
+       88.401297,
+       22.504615
+      ],
+      [
+       88.401297,
+       22.497447
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00009",
+    "name": "Bidyadharpur bheri 09",
+    "mouza": "Bidyadharpur",
+    "ward": "Sonarpur",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.424068,
+    "centroid_lat": 22.498252,
+    "polygon_area_m2": 1128650.4,
+    "baseline_area_m2": 1128650.4
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.419861,
+       22.492384
+      ],
+      [
+       88.428275,
+       22.492384
+      ],
+      [
+       88.428275,
+       22.50412
+      ],
+      [
+       88.419861,
+       22.50412
+      ],
+      [
+       88.419861,
+       22.492384
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00010",
+    "name": "Kantatala bheri 10",
+    "mouza": "Kantatala",
+    "ward": "Ward 107",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.444873,
+    "centroid_lat": 22.496118,
+    "polygon_area_m2": 1528342.7,
+    "baseline_area_m2": 1528342.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.439101,
+       22.490326
+      ],
+      [
+       88.450644,
+       22.490326
+      ],
+      [
+       88.450644,
+       22.50191
+      ],
+      [
+       88.439101,
+       22.50191
+      ],
+      [
+       88.439101,
+       22.490326
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00011",
+    "name": "Goltala bheri 11",
+    "mouza": "Goltala",
+    "ward": "Ward 57",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.457697,
+    "centroid_lat": 22.501596,
+    "polygon_area_m2": 1262167.6,
+    "baseline_area_m2": 1262167.6
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.451894,
+       22.496838
+      ],
+      [
+       88.4635,
+       22.496838
+      ],
+      [
+       88.4635,
+       22.506353
+      ],
+      [
+       88.451894,
+       22.506353
+      ],
+      [
+       88.451894,
+       22.496838
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00012",
+    "name": "Dhapa bheri 12",
+    "mouza": "Dhapa",
+    "ward": "Ward 58",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.478237,
+    "centroid_lat": 22.500957,
+    "polygon_area_m2": 1300788.3,
+    "baseline_area_m2": 1300788.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.472368,
+       22.49611
+      ],
+      [
+       88.484107,
+       22.49611
+      ],
+      [
+       88.484107,
+       22.505805
+      ],
+      [
+       88.472368,
+       22.505805
+      ],
+      [
+       88.472368,
+       22.49611
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00013",
+    "name": "Chowbaga bheri 13",
+    "mouza": "Chowbaga",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.495021,
+    "centroid_lat": 22.499357,
+    "polygon_area_m2": 1374691.3,
+    "baseline_area_m2": 1374691.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.488949,
+       22.494405
+      ],
+      [
+       88.501093,
+       22.494405
+      ],
+      [
+       88.501093,
+       22.504309
+      ],
+      [
+       88.488949,
+       22.504309
+      ],
+      [
+       88.488949,
+       22.494405
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00014",
+    "name": "Nalban bheri 14",
+    "mouza": "Nalban",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.511894,
+    "centroid_lat": 22.499868,
+    "polygon_area_m2": 1062977.8,
+    "baseline_area_m2": 1062977.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.505339,
+       22.496321
+      ],
+      [
+       88.518449,
+       22.496321
+      ],
+      [
+       88.518449,
+       22.503415
+      ],
+      [
+       88.505339,
+       22.503415
+      ],
+      [
+       88.505339,
+       22.496321
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00015",
+    "name": "Kheyadaha bheri 15",
+    "mouza": "Kheyadaha",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.40944,
+    "centroid_lat": 22.518559,
+    "polygon_area_m2": 1167275.2,
+    "baseline_area_m2": 1167275.2
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.404846,
+       22.513
+      ],
+      [
+       88.414033,
+       22.513
+      ],
+      [
+       88.414033,
+       22.524118
+      ],
+      [
+       88.404846,
+       22.524118
+      ],
+      [
+       88.404846,
+       22.513
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00016",
+    "name": "Bantala bheri 16",
+    "mouza": "Bantala",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.425374,
+    "centroid_lat": 22.520216,
+    "polygon_area_m2": 1058167.8,
+    "baseline_area_m2": 1058167.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.420791,
+       22.515165
+      ],
+      [
+       88.429957,
+       22.515165
+      ],
+      [
+       88.429957,
+       22.525267
+      ],
+      [
+       88.420791,
+       22.525267
+      ],
+      [
+       88.420791,
+       22.515165
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00017",
+    "name": "Karaidanga bheri 17",
+    "mouza": "Karaidanga",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.441773,
+    "centroid_lat": 22.519424,
+    "polygon_area_m2": 1090518.2,
+    "baseline_area_m2": 1090518.2
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.435696,
+       22.515498
+      ],
+      [
+       88.447849,
+       22.515498
+      ],
+      [
+       88.447849,
+       22.52335
+      ],
+      [
+       88.435696,
+       22.52335
+      ],
+      [
+       88.435696,
+       22.515498
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00018",
+    "name": "Kulberia bheri 18",
+    "mouza": "Kulberia",
+    "ward": "Bhangar-II",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.460432,
+    "centroid_lat": 22.516975,
+    "polygon_area_m2": 1113047.3,
+    "baseline_area_m2": 1113047.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.456023,
+       22.511453
+      ],
+      [
+       88.464841,
+       22.511453
+      ],
+      [
+       88.464841,
+       22.522498
+      ],
+      [
+       88.456023,
+       22.522498
+      ],
+      [
+       88.456023,
+       22.511453
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00019",
+    "name": "Bamanghata bheri 19",
+    "mouza": "Bamanghata",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.478669,
+    "centroid_lat": 22.516824,
+    "polygon_area_m2": 1344067.3,
+    "baseline_area_m2": 1344067.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.472557,
+       22.512013
+      ],
+      [
+       88.48478,
+       22.512013
+      ],
+      [
+       88.48478,
+       22.521635
+      ],
+      [
+       88.472557,
+       22.521635
+      ],
+      [
+       88.472557,
+       22.512013
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00020",
+    "name": "Tardaha bheri 20",
+    "mouza": "Tardaha",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.491944,
+    "centroid_lat": 22.516836,
+    "polygon_area_m2": 1026428.8,
+    "baseline_area_m2": 1026428.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.486704,
+       22.51255
+      ],
+      [
+       88.497183,
+       22.51255
+      ],
+      [
+       88.497183,
+       22.521121
+      ],
+      [
+       88.486704,
+       22.521121
+      ],
+      [
+       88.486704,
+       22.51255
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00021",
+    "name": "Bidyadharpur bheri 21",
+    "mouza": "Bidyadharpur",
+    "ward": "Sonarpur",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.508904,
+    "centroid_lat": 22.51644,
+    "polygon_area_m2": 1215837.1,
+    "baseline_area_m2": 1215837.1
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.504566,
+       22.51031
+      ],
+      [
+       88.513243,
+       22.51031
+      ],
+      [
+       88.513243,
+       22.522571
+      ],
+      [
+       88.504566,
+       22.522571
+      ],
+      [
+       88.504566,
+       22.51031
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00022",
+    "name": "Kantatala bheri 22",
+    "mouza": "Kantatala",
+    "ward": "Ward 107",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.406522,
+    "centroid_lat": 22.537087,
+    "polygon_area_m2": 1185501.9,
+    "baseline_area_m2": 1185501.9
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.400694,
+       22.532636
+      ],
+      [
+       88.41235,
+       22.532636
+      ],
+      [
+       88.41235,
+       22.541537
+      ],
+      [
+       88.400694,
+       22.541537
+      ],
+      [
+       88.400694,
+       22.532636
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00023",
+    "name": "Goltala bheri 23",
+    "mouza": "Goltala",
+    "ward": "Ward 57",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.426604,
+    "centroid_lat": 22.535028,
+    "polygon_area_m2": 654261.8,
+    "baseline_area_m2": 654261.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.422538,
+       22.531508
+      ],
+      [
+       88.43067,
+       22.531508
+      ],
+      [
+       88.43067,
+       22.538549
+      ],
+      [
+       88.422538,
+       22.538549
+      ],
+      [
+       88.422538,
+       22.531508
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00024",
+    "name": "Dhapa bheri 24",
+    "mouza": "Dhapa",
+    "ward": "Ward 58",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.444482,
+    "centroid_lat": 22.539512,
+    "polygon_area_m2": 908314.6,
+    "baseline_area_m2": 908314.6
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.440591,
+       22.534404
+      ],
+      [
+       88.448373,
+       22.534404
+      ],
+      [
+       88.448373,
+       22.544619
+      ],
+      [
+       88.440591,
+       22.544619
+      ],
+      [
+       88.440591,
+       22.534404
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00025",
+    "name": "Chowbaga bheri 25",
+    "mouza": "Chowbaga",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.462052,
+    "centroid_lat": 22.534937,
+    "polygon_area_m2": 1389338.1,
+    "baseline_area_m2": 1389338.1
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.455221,
+       22.530488
+      ],
+      [
+       88.468884,
+       22.530488
+      ],
+      [
+       88.468884,
+       22.539387
+      ],
+      [
+       88.455221,
+       22.539387
+      ],
+      [
+       88.455221,
+       22.530488
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00026",
+    "name": "Nalban bheri 26",
+    "mouza": "Nalban",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.477273,
+    "centroid_lat": 22.538009,
+    "polygon_area_m2": 1000188.8,
+    "baseline_area_m2": 1000188.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.47088,
+       22.534586
+      ],
+      [
+       88.483666,
+       22.534586
+      ],
+      [
+       88.483666,
+       22.541432
+      ],
+      [
+       88.47088,
+       22.541432
+      ],
+      [
+       88.47088,
+       22.534586
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00027",
+    "name": "Kheyadaha bheri 27",
+    "mouza": "Kheyadaha",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.494978,
+    "centroid_lat": 22.534327,
+    "polygon_area_m2": 1368398.0,
+    "baseline_area_m2": 1368398.0
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.488674,
+       22.529577
+      ],
+      [
+       88.501281,
+       22.529577
+      ],
+      [
+       88.501281,
+       22.539076
+      ],
+      [
+       88.488674,
+       22.539076
+      ],
+      [
+       88.488674,
+       22.529577
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00028",
+    "name": "Bantala bheri 28",
+    "mouza": "Bantala",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.510903,
+    "centroid_lat": 22.539329,
+    "polygon_area_m2": 1569681.1,
+    "baseline_area_m2": 1569681.1
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.504706,
+       22.533788
+      ],
+      [
+       88.517101,
+       22.533788
+      ],
+      [
+       88.517101,
+       22.544871
+      ],
+      [
+       88.504706,
+       22.544871
+      ],
+      [
+       88.504706,
+       22.533788
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00029",
+    "name": "Karaidanga bheri 29",
+    "mouza": "Karaidanga",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.406175,
+    "centroid_lat": 22.55368,
+    "polygon_area_m2": 890151.5,
+    "baseline_area_m2": 890151.5
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.401848,
+       22.549178
+      ],
+      [
+       88.410501,
+       22.549178
+      ],
+      [
+       88.410501,
+       22.558182
+      ],
+      [
+       88.401848,
+       22.558182
+      ],
+      [
+       88.401848,
+       22.549178
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00030",
+    "name": "Kulberia bheri 30",
+    "mouza": "Kulberia",
+    "ward": "Bhangar-II",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.425016,
+    "centroid_lat": 22.555963,
+    "polygon_area_m2": 1132024.3,
+    "baseline_area_m2": 1132024.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.419332,
+       22.551605
+      ],
+      [
+       88.4307,
+       22.551605
+      ],
+      [
+       88.4307,
+       22.560321
+      ],
+      [
+       88.419332,
+       22.560321
+      ],
+      [
+       88.419332,
+       22.551605
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00031",
+    "name": "Bamanghata bheri 31",
+    "mouza": "Bamanghata",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.440694,
+    "centroid_lat": 22.556764,
+    "polygon_area_m2": 627572.7,
+    "baseline_area_m2": 627572.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.43663,
+       22.553384
+      ],
+      [
+       88.444757,
+       22.553384
+      ],
+      [
+       88.444757,
+       22.560143
+      ],
+      [
+       88.43663,
+       22.560143
+      ],
+      [
+       88.43663,
+       22.553384
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00032",
+    "name": "Tardaha bheri 32",
+    "mouza": "Tardaha",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.459327,
+    "centroid_lat": 22.553377,
+    "polygon_area_m2": 1113606.3,
+    "baseline_area_m2": 1113606.3
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.453487,
+       22.549205
+      ],
+      [
+       88.465167,
+       22.549205
+      ],
+      [
+       88.465167,
+       22.55755
+      ],
+      [
+       88.453487,
+       22.55755
+      ],
+      [
+       88.453487,
+       22.549205
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00033",
+    "name": "Bidyadharpur bheri 33",
+    "mouza": "Bidyadharpur",
+    "ward": "Sonarpur",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.474644,
+    "centroid_lat": 22.558855,
+    "polygon_area_m2": 1415733.1,
+    "baseline_area_m2": 1415733.1
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.467847,
+       22.554298
+      ],
+      [
+       88.481442,
+       22.554298
+      ],
+      [
+       88.481442,
+       22.563413
+      ],
+      [
+       88.467847,
+       22.563413
+      ],
+      [
+       88.467847,
+       22.554298
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00034",
+    "name": "Kantatala bheri 34",
+    "mouza": "Kantatala",
+    "ward": "Ward 107",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.492081,
+    "centroid_lat": 22.554219,
+    "polygon_area_m2": 1136940.9,
+    "baseline_area_m2": 1136940.9
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.48751,
+       22.548777
+      ],
+      [
+       88.496653,
+       22.548777
+      ],
+      [
+       88.496653,
+       22.559661
+      ],
+      [
+       88.48751,
+       22.559661
+      ],
+      [
+       88.48751,
+       22.548777
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00035",
+    "name": "Goltala bheri 35",
+    "mouza": "Goltala",
+    "ward": "Ward 57",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.512938,
+    "centroid_lat": 22.557859,
+    "polygon_area_m2": 1509195.8,
+    "baseline_area_m2": 1509195.8
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.506768,
+       22.552507
+      ],
+      [
+       88.519109,
+       22.552507
+      ],
+      [
+       88.519109,
+       22.563211
+      ],
+      [
+       88.506768,
+       22.563211
+      ],
+      [
+       88.506768,
+       22.552507
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00036",
+    "name": "Dhapa bheri 36",
+    "mouza": "Dhapa",
+    "ward": "Ward 58",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.410713,
+    "centroid_lat": 22.572703,
+    "polygon_area_m2": 1093358.6,
+    "baseline_area_m2": 1093358.6
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.404302,
+       22.568971
+      ],
+      [
+       88.417125,
+       22.568971
+      ],
+      [
+       88.417125,
+       22.576435
+      ],
+      [
+       88.404302,
+       22.576435
+      ],
+      [
+       88.404302,
+       22.568971
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00037",
+    "name": "Chowbaga bheri 37",
+    "mouza": "Chowbaga",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.423735,
+    "centroid_lat": 22.574353,
+    "polygon_area_m2": 1262495.7,
+    "baseline_area_m2": 1262495.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.416973,
+       22.570267
+      ],
+      [
+       88.430497,
+       22.570267
+      ],
+      [
+       88.430497,
+       22.578439
+      ],
+      [
+       88.416973,
+       22.578439
+      ],
+      [
+       88.416973,
+       22.570267
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00038",
+    "name": "Nalban bheri 38",
+    "mouza": "Nalban",
+    "ward": "Ward 108",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.442768,
+    "centroid_lat": 22.573801,
+    "polygon_area_m2": 1385773.5,
+    "baseline_area_m2": 1385773.5
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.437616,
+       22.567914
+      ],
+      [
+       88.44792,
+       22.567914
+      ],
+      [
+       88.44792,
+       22.579687
+      ],
+      [
+       88.437616,
+       22.579687
+      ],
+      [
+       88.437616,
+       22.567914
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00039",
+    "name": "Kheyadaha bheri 39",
+    "mouza": "Kheyadaha",
+    "ward": "Ward 109",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.458221,
+    "centroid_lat": 22.576225,
+    "polygon_area_m2": 1744064.7,
+    "baseline_area_m2": 1744064.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.451514,
+       22.570535
+      ],
+      [
+       88.464929,
+       22.570535
+      ],
+      [
+       88.464929,
+       22.581916
+      ],
+      [
+       88.451514,
+       22.581916
+      ],
+      [
+       88.451514,
+       22.570535
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00040",
+    "name": "Bantala bheri 40",
+    "mouza": "Bantala",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.478307,
+    "centroid_lat": 22.573624,
+    "polygon_area_m2": 1391632.7,
+    "baseline_area_m2": 1391632.7
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.472725,
+       22.568167
+      ],
+      [
+       88.483888,
+       22.568167
+      ],
+      [
+       88.483888,
+       22.57908
+      ],
+      [
+       88.472725,
+       22.57908
+      ],
+      [
+       88.472725,
+       22.568167
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00041",
+    "name": "Karaidanga bheri 41",
+    "mouza": "Karaidanga",
+    "ward": "Bhangar-I",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.491729,
+    "centroid_lat": 22.574058,
+    "polygon_area_m2": 825751.1,
+    "baseline_area_m2": 825751.1
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.487701,
+       22.569571
+      ],
+      [
+       88.495756,
+       22.569571
+      ],
+      [
+       88.495756,
+       22.578545
+      ],
+      [
+       88.487701,
+       22.578545
+      ],
+      [
+       88.487701,
+       22.569571
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "GEEID": "EKW_00042",
+    "name": "Kulberia bheri 42",
+    "mouza": "Kulberia",
+    "ward": "Bhangar-II",
+    "provenance": "synthetic-demo",
+    "centroid_lon": 88.513023,
+    "centroid_lat": 22.574089,
+    "polygon_area_m2": 950114.9,
+    "baseline_area_m2": 950114.9
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       88.508763,
+       22.569208
+      ],
+      [
+       88.517283,
+       22.569208
+      ],
+      [
+       88.517283,
+       22.57897
+      ],
+      [
+       88.508763,
+       22.57897
+      ],
+      [
+       88.508763,
+       22.569208
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

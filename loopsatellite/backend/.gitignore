@@ -1,0 +1,45 @@
+# --- Secrets ----------------------------------------------------------------
+.env
+.env.*
+!.env.example
+# Earth Engine service-account keys. GEE_SERVICE_ACCOUNT_JSON points at one of
+# these; committing it would hand over the project.
+*service-account*.json
+*.pem
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+.python-version
+
+# --- Tooling caches ---------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Retrieval index --------------------------------------------------------
+# Derived from app/rag/documents/, which IS tracked.
+# Rebuild: python -m app.rag.ingest
+app/rag/index/
+
+# --- Offline pipeline intermediates -----------------------------------------
+# Scene CSVs, monthly series, STL decompositions — hundreds of files, all
+# regenerable by data_pipeline/run_pipeline.sh.
+data_pipeline/work/
+# Exports downloaded from the GEE Code Editor before step 04 reads them.
+data_pipeline/00_reproduce_eowater/*.csv
+
+# NOTE: precomputed/ is deliberately NOT ignored. It is build output, but it is
+# the only thing the live API reads, and the app must run straight from a clone
+# without Earth Engine credentials. See the golden rule in README.md.
+
+# --- Runtime data -----------------------------------------------------------
+# Officer verifications, written here when DATABASE_URL is unset. Real user data,
+# not build output — belongs to whoever ran the app, not to the repository.
+var/

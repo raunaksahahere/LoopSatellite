@@ -1,0 +1,22 @@
+# Local Postgres fallback for dev when you don't want to point at Neon.
+# Note: plain postgres — no PostGIS. Geometries live in JSONB, by design (see docs/architecture.md).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: loopsatellite-db
+    environment:
+      POSTGRES_USER: loopsatellite
+      POSTGRES_PASSWORD: loopsatellite
+      POSTGRES_DB: loopsatellite
+    ports:
+      - "5432:5432"
+    volumes:
+      - loopsatellite_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loopsatellite"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  loopsatellite_pgdata:
