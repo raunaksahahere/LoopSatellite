@@ -244,7 +244,7 @@ def query(question: str) -> dict[str, Any]:
     unparsed: list[str] = []
     interpretation: str | None = None
 
-    if client.is_configured():
+    if client.is_available():
         try:
             payload = client.complete_json(
                 [
@@ -253,6 +253,7 @@ def query(question: str) -> dict[str, Any]:
                 ],
                 temperature=0.0,
                 max_tokens=600,
+                allow_network=client.is_configured(),
             )
             if isinstance(payload, dict):
                 model_filter = _sanitise(payload.get("filter") or {})

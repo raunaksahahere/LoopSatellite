@@ -38,6 +38,7 @@ from common import (
 )
 
 MASK_PATH = WORK_DIR / "ekw_ponds.geojson"
+FALLBACKS_PATH = WORK_DIR / "fallbacks.json"
 ANOMALIES_PATH = WORK_DIR / "anomalies_classified.json"
 DECOMP_DIR = WORK_DIR / "decomposition"
 SERIES_DIR = WORK_DIR / "timeseries"
@@ -204,6 +205,11 @@ def main() -> None:
     else:
         shutil.rmtree(CHIPS_DIR, ignore_errors=True)
 
+    # Which steps could not find real input and synthesised instead. Written by
+    # run_pipeline.sh; carried into the manifest so the UI can state it rather
+    # than the terminal being the only place it was ever said.
+    fallbacks = read_json(FALLBACKS_PATH) if FALLBACKS_PATH.exists() else []
+
     provenances = sorted({p.get("provenance") for p in ponds.values() if p.get("provenance")})
     sources = sorted({a.get("conversion_source") for a in anomalies if a.get("conversion_source")})
     write_json(
@@ -215,7 +221,12 @@ def main() -> None:
             "anomaly_count": len(anomalies),
             "pond_provenance": provenances,
             "conversion_source": sources,
-            "is_synthetic": any("synthetic" in (p or "") for p in provenances),
+            "is_synthetic": (
+                any("synthetic" in (p or "") for p in provenances)
+                or any("synthetic" in (s or "") for s in sources)
+                or bool(fallbacks)
+            ),
+            "fallbacks": fallbacks,
             "detection": {
                 "water_index": "MNDWI (green-SWIR)/(green+SWIR)",
                 "mndwi_threshold": MNDWI_THRESHOLD,

@@ -86,10 +86,27 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_site_url: str | None = None
     openrouter_app_name: str = "LoopSatellite"
+    # Comma-separated slugs tried in order after the primary. A 429 or a delisted
+    # model moves down the chain before anything fails — free-tier slugs are rate
+    # limited and get delisted without notice.
+    openrouter_model_fallbacks: str = ""
+    # Write-through response cache under precomputed/llm/. Switch off to force
+    # every call to hit the provider (useful when checking a prompt change).
+    llm_cache_enabled: bool = True
 
     # --- Web search (evidence corroboration) ----------------------------
     search_provider: str = "openrouter_online"  # openrouter_online | tavily | serper | none
     search_api_key: str | None = None
+
+    # --- Sessions (Neon Managed Better Auth) ----------------------------
+    # The auth URL Neon prints once Auth is enabled on the branch, e.g.
+    #   https://ep-xxx.neon.tech/neondb/auth
+    # Blank means auth is not configured: the API runs open and says so at
+    # startup and in /api/health. That is a local state, not a deployed one.
+    neon_auth_url: str | None = None
+    # Set true on a deployment. The app then refuses to boot without an auth URL,
+    # rather than quietly serving everything to everyone.
+    auth_required: bool = False
 
     # --- Google Earth Engine (offline pipeline + the slow area path) -----
     # Personal OAuth refresh token, not a service account. The whole contents of
@@ -118,12 +135,30 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
+    def model_chain(self) -> list[str]:
+        """Primary model first, then the fallbacks, de-duplicated."""
+        chain: list[str] = []
+        for name in [self.openrouter_model, *self.openrouter_model_fallbacks.split(",")]:
+            slug = (name or "").strip()
+            if slug and slug not in chain:
+                chain.append(slug)
+        return chain
+
+    @property
+    def llm_cache_dir(self) -> Path:
+        return self.precomputed_dir / "llm"
+
+    @property
     def llm_configured(self) -> bool:
         return bool(self.openrouter_api_key and self.openrouter_model)
 
     @property
     def db_configured(self) -> bool:
         return bool(self.database_url)
+
+    @property
+    def auth_configured(self) -> bool:
+        return bool(self.neon_auth_url)
 
     @property
     def gee_configured(self) -> bool:

@@ -132,7 +132,7 @@ def draft(
         for h in hits
     ]
 
-    if not client.is_configured():
+    if not client.is_available():
         return {
             "anomaly_id": anomaly["id"],
             "grounded": True,
@@ -141,7 +141,7 @@ def draft(
             "disclaimer": DISCLAIMER,
             "llm_used": False,
             "note": (
-                "No language model is configured, so this notice was assembled from a "
+                "No language model is available, so this notice was assembled from a "
                 "fixed template. The provisions quoted are the ones retrieved from the "
                 "source instruments and are unaffected."
             ),
@@ -153,6 +153,7 @@ def draft(
             [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
             temperature=0.2,
             max_tokens=1400,
+            allow_network=client.is_configured(),
         )
     except client.LLMError as exc:
         logger.warning("notice drafting failed: %s", exc)

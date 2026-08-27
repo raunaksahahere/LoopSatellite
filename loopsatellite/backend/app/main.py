@@ -19,7 +19,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import anomalies, areas, llm, ponds, reports, verification_queue
+from app.api.routes import (
+    anomalies,
+    areas,
+    llm,
+    ponds,
+    provenance,
+    reports,
+    verification_queue,
+)
+from app.core import auth
 from app.core.config import settings
 from app.core.gee_auth import status as gee_status
 from app.core.gee_auth import try_initialize
@@ -56,12 +65,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(ponds.router)
-app.include_router(areas.router)
-app.include_router(anomalies.router)
-app.include_router(verification_queue.router)
-app.include_router(reports.router)
-app.include_router(llm.router)
+# Every data router is registered WITH the session dependency, in one place, so
+# that protecting a route is not something anyone has to remember per-route.
+# `tests/test_auth.py` walks the live app and fails if any other path is
+# reachable without a session.
+PROTECTED_ROUTERS = (
+    ponds.router,
+    areas.router,
+    anomalies.router,
+    verification_queue.router,
+    reports.router,
+    llm.router,
+)
+
+for _router in PROTECTED_ROUTERS:
+    app.include_router(_router, dependencies=[auth.Session])
+
+# Deliberately public, and a divergence from LoopSpill, which protects its
+# equivalent. This page exists to answer "how do we know this works on real
+# data?" with a link somebody can open — putting it behind a session defeats the
+# only thing it is for. It names no pond and reveals no finding: it describes how
+# the bundle was made.
+app.include_router(provenance.router)
 
 # Chips for the before/after slider are static files under precomputed/.
 if settings.precomputed_dir.exists():
@@ -104,6 +129,7 @@ def health() -> dict[str, Any]:
         "status": "ok" if data.get("precomputed") else "degraded",
         "data": data,
         "llm": client.status(),
+        "auth": auth.status_for_health(),
         "earth_engine": gee_status(),
         "gazetteer": {"places": len(gazetteer.names()), "names": gazetteer.names()},
         "verification_storage": verifications.backend(),
@@ -116,6 +142,16 @@ def manifest() -> dict[str, Any]:
 
 
 def _log_startup() -> None:
+    # Raises if AUTH_REQUIRED is set with no auth URL: refusing to boot is the
+    # right failure. Booting open on a deployment that asked for auth is not.
+    auth.check_startup()
+    state = auth.status_for_health()
+    logger.info(
+        "auth: configured=%s required=%s%s",
+        state["configured"],
+        state["required"],
+        "" if state["configured"] else "  <- EVERY ROUTE IS OPEN",
+    )
     # Earth Engine is only needed by the slow path. Failing to reach it must not
     # stop the API booting — everything else works without it.
     try_initialize()

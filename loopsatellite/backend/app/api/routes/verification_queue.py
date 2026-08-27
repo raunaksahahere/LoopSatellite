@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import get_anomaly_or_404
+from app.core.auth import WritableSession
 from app.schemas.anomaly import VerificationIn
 from app.services import verifications
 from app.services.detection import stl_esd
@@ -51,6 +52,7 @@ async def get_queue(
 async def verify(
     payload: VerificationIn,
     anomaly: dict[str, Any] = Depends(get_anomaly_or_404),
+    _principal=WritableSession,
 ) -> dict[str, Any]:
     try:
         record = await verifications.add(

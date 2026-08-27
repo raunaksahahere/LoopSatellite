@@ -1,3 +1,4 @@
+import { sessionHeaders } from './auth'
 import type {
   Anomaly,
   AnomalyDetail,
@@ -8,6 +9,7 @@ import type {
   NLQueryResponse,
   NoticeResponse,
   PondCollection,
+  Provenance,
   QueueResponse,
   TimeSeries,
   Verification,
@@ -32,7 +34,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${BASE}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        // A demo tab sends the demo header; a signed-in operator sends a bearer
+        // token. Read fresh per request — a cached token expires mid-session.
+        ...(await sessionHeaders()),
+        ...(init?.headers ?? {}),
+      },
     })
   } catch {
     throw new ApiError(
@@ -48,6 +56,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await response.json()
       if (typeof body.detail === 'string') detail = body.detail
+    if (response.status === 403) hint = 'Sign in to do this.'
+    if (response.status === 401) hint = 'Your session has expired — sign in again.'
       if (typeof body.hint === 'string') hint = body.hint
     } catch {
       /* non-JSON error body — keep the generic message */
@@ -69,6 +79,8 @@ function query(params: Record<string, string | number | boolean | null | undefin
 
 export const api = {
   health: () => request<Health>('/api/health'),
+
+  provenance: () => request<Provenance>('/api/provenance'),
 
   ponds: (params: { ward?: string; mouza?: string; bbox?: string } = {}) =>
     request<PondCollection>(`/api/ponds${query(params)}`),

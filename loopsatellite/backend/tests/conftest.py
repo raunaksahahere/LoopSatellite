@@ -9,11 +9,16 @@ Verification storage has a file backend precisely so the read path works without
 a database, and that is what the suite exercises. To test against a real
 database, set TEST_DATABASE_URL — never DATABASE_URL.
 
-**Tests never call a real language model either.** Once OPENROUTER_API_KEY is
-filled in, every notice, report and query test starts making live billable calls:
-slow, flaky (a provider 429 is not a code defect), and non-deterministic. The
-suite runs against the deterministic fallbacks, which is what should be asserted
-anyway. Individual tests that want a model monkeypatch `client.complete`.
+**Tests never call a real language model either** — and, since the response cache
+landed, never read one's cached answer. Stripping only the API key was not enough:
+`precomputed/llm/` ships 27 warmed entries, so `client.is_available()` stayed true
+and every notice, report and query test quietly started asserting against model
+prose instead of the deterministic fallback. Whether those tests passed then
+depended on what someone last warmed, which is not a test.
+
+So the cache is switched off here as well. The suite asserts the deterministic
+path, which is the one that has to be right when nothing else is available.
+`tests/test_llm_cache.py` exercises the cache itself against its own tmp_path.
 """
 
 from __future__ import annotations
@@ -40,6 +45,10 @@ def isolate_from_live_llm() -> None:
         return
     settings.openrouter_api_key = None
     settings.openrouter_model = None
+    settings.openrouter_model_fallbacks = ""
+    # Not just the key: a warm cache would make is_available() true and serve
+    # model prose to tests that exist to check the fallback.
+    settings.llm_cache_enabled = False
 
 
 @pytest.fixture(scope="session", autouse=True)

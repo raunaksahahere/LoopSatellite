@@ -1,17 +1,25 @@
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 
+import { RequireSession } from './components/auth/RequireSession'
+import { SignOutButton } from './components/auth/SignOutButton'
 import { DashboardPage } from './pages/DashboardPage'
+import { DataSourcesPage } from './pages/DataSourcesPage'
 import { PondDetailPage } from './pages/PondDetailPage'
 import { QueuePage } from './pages/QueuePage'
+import { WelcomePage } from './pages/WelcomePage'
 import { EmptyState, Note } from './components/ui'
 import { api } from './lib/api'
 import { useAsync } from './lib/useAsync'
 
 export default function App() {
   const { data: health } = useAsync(() => api.health(), [])
+  // The front door renders without the app shell. A signed-out visitor should
+  // not see a nav whose every link bounces them straight back here.
+  const atFrontDoor = useLocation().pathname === '/welcome'
 
   return (
     <div className="app">
+      {!atFrontDoor && (
       <header className="appbar">
         <div className="appbar__inner">
           <NavLink to="/" className="brand">
@@ -25,15 +33,21 @@ export default function App() {
               Review
               {health?.data.anomaly_count ? ` (${health.data.anomaly_count})` : ''}
             </NavLink>
+            <NavLink to="/data-sources">Data sources</NavLink>
+            <SignOutButton />
           </nav>
         </div>
       </header>
+      )}
 
-      {health?.data.is_synthetic && (
+      {!atFrontDoor && health?.data.is_synthetic && (
         <div className="banner">
           <div className="banner__inner">
             Demonstration data — these pond boundaries and measurements are synthetic.
-            Do not act on them.
+            Do not act on them.{' '}
+            <NavLink to="/data-sources" style={{ color: 'inherit' }}>
+              See exactly what is real →
+            </NavLink>
           </div>
         </div>
       )}
@@ -49,9 +63,38 @@ export default function App() {
 
       <main className="app__main" style={{ flex: 1 }}>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/queue" element={<QueuePage />} />
-          <Route path="/pond/:pondId" element={<PondDetailPage health={health} />} />
+          {/* The front door. Public by definition — it is how you get in. */}
+          <Route path="/welcome" element={<WelcomePage />} />
+
+          {/* Public on purpose: it answers "how do we know this works on real
+              data?" with a link somebody can open. The backend keeps
+              /api/provenance public to match. */}
+          <Route path="/data-sources" element={<DataSourcesPage />} />
+
+          <Route
+            path="/"
+            element={
+              <RequireSession>
+                <DashboardPage />
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/queue"
+            element={
+              <RequireSession>
+                <QueuePage />
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/pond/:pondId"
+            element={
+              <RequireSession>
+                <PondDetailPage health={health} />
+              </RequireSession>
+            }
+          />
           <Route
             path="*"
             element={

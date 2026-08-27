@@ -523,3 +523,96 @@ pre.draft {
 .modeswitch__tab:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 input[type='range'] { accent-color: var(--accent); }
+
+/* ------------------------------------------------------------- provenance */
+/* A synthetic demo that says so is more trustworthy than one that stays quiet.
+   Status is carried by a badge AND a left border, so it survives greyscale. */
+.provlayer { border-left: 5px solid var(--line); }
+.provlayer--real { border-left-color: var(--low); }
+.provlayer--synthetic { border-left-color: var(--medium); }
+.provlayer--not_run { border-left-color: var(--ink-3); }
+
+.provlayer__rows {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0.7rem 0 0;
+}
+.provlayer__rows dt {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 0.15rem;
+}
+.provlayer__rows dd { margin: 0; }
+
+@media (max-width: 560px) {
+  .provlayer__rows { grid-template-columns: 1fr; gap: 0.1rem 0; }
+  .provlayer__rows dd { margin-bottom: 0.5rem; }
+}
+
+/* -------------------------------------------------------------- front door */
+/* One way in, two doors. Deep water at night — deliberately unlike the app
+   shell, so signing in reads as entering rather than as another screen. */
+.frontdoor {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #14403e 0%, #0a1f1e 55%, #060f0f 100%);
+}
+
+.frontdoor__panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.8rem 1.6rem;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+}
+
+.frontdoor__kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.frontdoor__title { margin: 0.35rem 0 0; font-size: 1.9rem; letter-spacing: -0.03em; }
+.frontdoor__purpose { margin: 0.5rem 0 0; color: var(--ink-2); font-size: 0.95rem; }
+
+.frontdoor__form { margin-top: 1.4rem; }
+
+.frontdoor__demo {
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.frontdoor__demo:hover { background: var(--surface-2); color: var(--ink); }
+.frontdoor__demo:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.frontdoor__note {
+  margin: 0.7rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  line-height: 1.45;
+}
+
+.frontdoor__aside {
+  display: inline-block;
+  margin-top: 1.3rem;
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.frontdoor__aside:hover { text-decoration: underline; }

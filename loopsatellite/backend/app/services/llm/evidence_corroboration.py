@@ -64,6 +64,9 @@ def build_query(anomaly: dict[str, Any], extra_terms: list[str] | None = None) -
 def corroborate(anomaly: dict[str, Any], extra_terms: list[str] | None = None) -> dict[str, Any]:
     query = build_query(anomaly, extra_terms)
 
+    # Deliberately is_configured, not is_available: this one needs a live search.
+    # A cached answer about what the public record said last week would be worse
+    # than an honest "search is switched off".
     if not client.is_configured():
         return {
             "anomaly_id": anomaly["id"],

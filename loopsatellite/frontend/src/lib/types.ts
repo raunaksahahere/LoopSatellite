@@ -267,3 +267,32 @@ export interface AreaCapability {
   typical_duration: string
   why_slow: string
 }
+
+export type ProvenanceStatus = 'real' | 'synthetic' | 'not_run'
+
+export interface ProvenanceLayer {
+  key: string
+  label: string
+  status: ProvenanceStatus
+  /** What produced what is on screen right now. */
+  on_screen: string
+  /** What would produce it for real. */
+  real_source: string
+  detail: string
+}
+
+export interface ProvenanceFallback {
+  step: string
+  reason: string
+}
+
+export interface Provenance {
+  headline: string
+  bundle_is_synthetic: boolean
+  generated_at: string | null
+  generated_by: string
+  fallbacks: ProvenanceFallback[]
+  counts: Record<string, number>
+  layers: ProvenanceLayer[]
+  to_make_it_real: string[]
+}

@@ -21,6 +21,11 @@ twice changes nothing.
 
     python -m app.seed              # load precomputed/ into DATABASE_URL
     python -m app.seed --dry-run    # count what would be written
+    python -m app.seed --warm-llm   # also fill the LLM response cache
+    python -m app.seed --warm-llm --skip-db   # cache only, no database needed
+
+Warming is the same idea one layer up: a demo should make no API calls, for the
+same reason it makes no Earth Engine call. See app/llm_warm.py.
 """
 
 from __future__ import annotations
@@ -37,6 +42,7 @@ from app.core.config import settings
 from app.core.database import get_sessionmaker
 from app.models import Anomaly, Observation, Pond
 from app.services.detection import repository
+from app.services.llm import client
 
 logger = logging.getLogger(__name__)
 
@@ -173,14 +179,30 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument(
+        "--warm-llm", action="store_true", help="fill the LLM response cache as well"
+    )
+    ap.add_argument("--skip-db", action="store_true", help="only warm; touch no database")
+    ap.add_argument("--limit", type=int, help="with --warm-llm: only the first N events")
     args = ap.parse_args()
 
-    counts = asyncio.run(seed(dry_run=args.dry_run))
-    verb = "would write" if args.dry_run else "wrote"
-    for table, n in counts.items():
-        print(f"  {verb} {n:>5} {table} rows")
-    if not args.dry_run:
-        print("\nDatabase seeded from precomputed/. Safe to re-run.")
+    if not args.skip_db:
+        counts = asyncio.run(seed(dry_run=args.dry_run))
+        verb = "would write" if args.dry_run else "wrote"
+        for table, n in counts.items():
+            print(f"  {verb} {n:>5} {table} rows")
+        if not args.dry_run:
+            print("\nDatabase seeded from precomputed/. Safe to re-run.")
+
+    if args.warm_llm:
+        from app import llm_warm
+
+        print(f"\nWarming the LLM cache into {client.cache_stats()['path']}")
+        warmed = llm_warm.warm_all(args.limit)
+        print(
+            f"\n  warmed {warmed['warmed']} · already cached {warmed['hit']} · "
+            f"skipped {warmed['skipped']} · failed {warmed['failed']}"
+        )
 
 
 if __name__ == "__main__":

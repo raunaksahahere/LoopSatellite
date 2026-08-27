@@ -16,6 +16,9 @@ dependencies = [
     "openai>=1.40",
     "reportlab>=4.2",
     "python-dotenv>=1.0",
+    # Session verification. The API checks the token itself rather than trusting
+    # the UI's route guard — see app/core/auth.py. Pure Python plus `cryptography`.
+    "PyJWT[crypto]>=2.9",
     # Geodesic circles for radius search. app/core/geo.py has a spherical
     # fallback if this is missing, but the ellipsoid is the correct answer.
     "pyproj>=3.6",

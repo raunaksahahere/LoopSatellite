@@ -11,6 +11,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 
+from app.core.auth import WritableSession
 from app.core.gee_auth import status as gee_status
 from app.schemas.area import AreaCreate, AreaList, AreaOut
 from app.services import areas
@@ -29,7 +30,11 @@ def _unavailable(exc: areas.AreasUnavailable) -> HTTPException:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start monitoring a new area (minutes, not seconds)",
 )
-async def submit_area(payload: AreaCreate, background: BackgroundTasks) -> dict[str, Any]:
+async def submit_area(
+    payload: AreaCreate,
+    background: BackgroundTasks,
+    _principal=WritableSession,
+) -> dict[str, Any]:
     """202, not 201: the work has been accepted, not completed.
 
     The centre and radius become a geodesic circle server-side. Poll

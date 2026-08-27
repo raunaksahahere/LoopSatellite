@@ -97,7 +97,7 @@ def collect_facts(
 
 def write(facts: dict[str, Any], evidence: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return {'sections': {...}, 'llm_used': bool}."""
-    if not client.is_configured():
+    if not client.is_available():
         return {"sections": template_sections(facts, evidence), "llm_used": False}
 
     try:
@@ -108,6 +108,7 @@ def write(facts: dict[str, Any], evidence: dict[str, Any] | None = None) -> dict
             ],
             temperature=0.3,
             max_tokens=1400,
+            allow_network=client.is_configured(),
         )
     except client.LLMError as exc:
         logger.warning("report writing failed: %s", exc)

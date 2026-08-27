@@ -230,6 +230,105 @@ present, one disclosure triangle away, in "How this was detected".
 Confidence is a colour-coded band ("High confidence" / "Needs a closer look"),
 never a decimal. The score is available as a tooltip.
 
+## The LLM cache, and why it is not optional
+
+`app/services/llm/client.py` reads a write-through response cache under
+`precomputed/llm/` before it ever reaches the provider, keyed on a hash of
+(model, messages).
+
+The golden rule, applied one layer up. The README already says it about
+geocoding; it matters more here, because a geocode is one round trip and a report
+completion is 1400 tokens generated while an audience watches. Warming the whole
+bundle took 93 seconds once; re-running takes 0.17 and makes no requests, and with
+the network severed a radius question and a grounded notice both answer in about
+two milliseconds.
+
+Three properties are load-bearing:
+
+- **Writing at request time is safe.** The key is a hash of the exact messages, so
+  a new question can only add an entry. Nothing warmed and checked can be altered
+  by whatever gets asked on stage.
+- **A shipped cache needs no configuration to be read.** `cache_read_any` matches
+  on messages alone, so a container with `precomputed/llm/` and no
+  `OPENROUTER_MODEL` still serves model-quality output. Without that the cache was
+  unreadable in exactly the deployment it was built for — the image has the cache,
+  Render has the key, and a demo box may have neither.
+- **Features gate on `is_available()`, not `is_configured()`.** A warm cache alone
+  counts. Evidence corroboration is the deliberate exception: it needs a live
+  search, and a cached answer about what the public record said last week would be
+  worse than an honest "search is switched off".
+
+When the cache misses and every model in `settings.model_chain` is exhausted,
+callers get `LLMUnavailable` — a subclass of `LLMError`, so every existing
+`except LLMError` already degrades correctly and nothing needed changing.
+
+## Falling back to synthesis, and where it must not
+
+`run_pipeline.sh` with no arguments looks for real inputs, does not find them,
+says so loudly, and synthesises instead. Each fallback is announced in the
+terminal at the time and recorded in `manifest.json`, which is what `/api/provenance`
+reads. A fresh clone therefore produces a working, clearly-labelled bundle with
+zero setup, and there is no `--demo` flag to forget.
+
+**The live slow path deliberately does not do this.** `services/area_processing.py`
+catches `EarthEngineUnavailable` and tells the officer satellite access is not
+configured. Auto-substituting synthetic results for what is a real request about a
+real place would be an integrity regression, not a completion of the feature. The
+offline pipeline and the live API are different trust contexts: one is building a
+demo bundle, the other is answering someone.
+
+## Saying what is real
+
+`GET /api/provenance` and `/data-sources` list every layer with a status of real,
+synthetic or not-run, what produced what is on screen, and what would produce it
+for real. The layer list and its wording are declared in code; only the evidence —
+manifest provenance, the fallback record, file counts — is read from disk, so a
+bundle cannot flatter itself.
+
+Today four layers are real (the application, the basemap, the place names, the
+law), four are synthetic (pond boundaries, measurements, the spectral verdict, the
+comparison chips), the detector is real and computed, and the live area pipeline
+has never been run.
+
+## Sessions, and the demo door
+
+Ported from LoopSpill. `app/core/auth.py` verifies a Neon Managed Better Auth JWT
+against Neon's published keys and hands routes a `Principal` or a 401.
+
+**Three states, not two.**
+
+| Request carries | Principal | Can write? |
+|---|---|---|
+| A valid JWT | the operator | yes |
+| `X-LoopSatellite-Demo: session` | `is_demo=True` | **no — 403** |
+| Neither, auth configured | — | 401 |
+
+The demo principal is the point. A judge opens the URL, clicks *Continue as
+demo*, and uses the entire read path — map, queue, pond detail, radius questions,
+grounded notices, reports — with no account. What it cannot do is the two things
+that cost something: recording a verification, and `POST /api/areas`, which
+starts a Sentinel-2 pull billed to a personal Earth Engine token. Those go through
+`require_writable_session`.
+
+**The frontend gate is not the gate.** `RequireSession` decides what renders; it
+is JavaScript on the visitor's machine and a debugger steps over it. Protection
+is a router-level dependency in `main.py`, applied to every data router in one
+place, and `tests/test_auth.py` walks the live OpenAPI schema and fails if any
+route is reachable anonymously. That walk originally found *nothing* and passed —
+FastAPI includes routers lazily, so `app.routes` is empty of them until the app is
+built. `test_there_are_protected_paths_to_test` caught the vacuous version.
+
+`/api/provenance` stays public, a deliberate divergence from LoopSpill, which
+protects its equivalent. That endpoint exists to answer "how do we know this works
+on real data?" with a link someone can open; behind a session it answers nothing.
+It names no pond and reveals no finding.
+
+**Unconfigured is a documented state.** With `NEON_AUTH_URL` unset the API runs
+open, logs `<- EVERY ROUTE IS OPEN` at startup and reports it in `/api/health`,
+and the front door offers only the demo button. `AUTH_REQUIRED=true` makes the app
+refuse to boot without an auth URL — which is what Render should run, because a
+deployment that asked for auth and silently got none is worse than one that fails.
+
 ## Earth Engine authentication
 
 `app/core/gee_auth.py`. A personal OAuth refresh token from `earthengine
