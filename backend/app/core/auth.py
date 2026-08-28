@@ -203,9 +203,16 @@ def check_startup() -> None:
     """Refuse to boot unconfigured when the operator asked for auth."""
     if settings.auth_required and not is_configured():
         raise AuthNotConfigured(
-            "AUTH_REQUIRED=true but CLERK_ISSUER is unset. Create a Clerk "
-            "application (dashboard.clerk.com), then set CLERK_ISSUER to its "
-            "Frontend API URL, e.g. https://sound-pelican-42.clerk.accounts.dev"
+            "AUTH_REQUIRED=true but CLERK_ISSUER is unset, so there is no way to "
+            "sign in and no way to verify a token. Refusing to boot rather than "
+            "serve every route to everyone.\n"
+            "Two ways out, and they are both one environment variable:\n"
+            "  1. Set CLERK_ISSUER to the Clerk Frontend API URL from "
+            "dashboard.clerk.com -> Configure -> API Keys, e.g. "
+            "https://sound-pelican-42.clerk.accounts.dev (and set "
+            "VITE_CLERK_PUBLISHABLE_KEY on the frontend from the same page).\n"
+            "  2. Set AUTH_REQUIRED=false to run open for now. The API then says "
+            "so at /api/health. Earth Engine spend stays capped either way."
         )
 
 
