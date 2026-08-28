@@ -1,1 +1,32 @@
+# Repo-wide rules only. Each app owns its own build artefacts:
+#   backend/.gitignore   Python, venv, pipeline intermediates, verifications
+#   frontend/.gitignore  node_modules, Vite output
+#   docs/.gitignore      generated documentation output
+
+# --- Secrets ----------------------------------------------------------------
+# Belt and braces: backend/ and frontend/ repeat these for their own .env files.
+# .env.example is the template and must stay tracked.
+.env
+.env.*
+!.env.example
+
+# --- OS -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editors ----------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*~
+
+# --- Stray output -----------------------------------------------------------
+*.log
+
+# --- Reference repos --------------------------------------------------------
+# EOWater, geeup, WaterDetect, LoopSpill and the rest are consulted, not
+# vendored. They live here for convenience and keep their own licences —
+# EOWater is GPL-3.0, so nesting it in this repository's history is exactly what
+# THIRD_PARTY_NOTICES.md exists to avoid.
 reference-repos/

@@ -255,16 +255,16 @@ result, not an error."* The map is the anchor and every path returns to it.
 ## Layout
 
 ```
-sp01-workspace/
-├── reference-repos/       cloned repos — gitignored, never nested in the project
-└── loopsatellite/
-    ├── backend/
-    │   ├── app/           FastAPI — reads precomputed/, never computes
-    │   ├── data_pipeline/ OFFLINE satellite pipeline, steps 00–07
-    │   ├── precomputed/   the only thing the live app reads
-    │   └── tests/
-    ├── frontend/          React + Vite + MapLibre + Recharts
-    └── docs/architecture.md
+LoopSatellite/
+├── backend/
+│   ├── app/           FastAPI — reads precomputed/, never computes
+│   ├── data_pipeline/ OFFLINE satellite pipeline, steps 00–07
+│   ├── precomputed/   the only thing the live app reads
+│   └── tests/
+├── frontend/          React + Vite + MapLibre + Recharts
+├── docs/architecture.md
+├── render.yaml
+└── reference-repos/   cloned repos — gitignored, never in this history
 ```
 
 `docs/architecture.md` has the detector's internals, the fast/slow split, the JSONB-not-PostGIS

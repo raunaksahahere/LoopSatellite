@@ -11,7 +11,7 @@ Do **not** edit anything here to make it pass.
 
 - A Google Earth Engine account with a cloud project (`GEE_PROJECT_ID` in `.env`)
 - `earthengine authenticate` already run
-- The EOWater clone at `../../../../reference-repos/EOWater/`
+- The EOWater clone at `../../../reference-repos/EOWater/`
 
 ## Procedure
 

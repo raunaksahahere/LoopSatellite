@@ -47,8 +47,9 @@ page numbers were removed during extraction; **no wording was altered**.
 
 ## Reference repositories
 
-The clones under `../reference-repos/` (sibling to this project, not inside it,
-and gitignored at the workspace level) are consulted, not vendored. They keep
+The clones under `reference-repos/` are consulted, not vendored. They sit at the
+repository root and are gitignored, so nothing from them enters this project's
+history — which matters most for EOWater, which is GPL-3.0. They keep
 their own licences. Nothing from `WaterDetect`, `geeup`, `legalRAG`,
 `fastapi-postgis`, `vite-maplibre-react`, `HLS_with_GEE`, `india-geodata`,
 `Leaflet-Before-After-Map-Comparison-Slider`, or the Random-Forest land-cover

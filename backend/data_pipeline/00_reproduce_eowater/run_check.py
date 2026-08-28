@@ -14,7 +14,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REFERENCE = (
-    HERE.parents[3]
+    HERE.parents[2]
     / "reference-repos"
     / "EOWater"
     / "outputs"

@@ -19,7 +19,7 @@ Two input modes:
 
 Usage:
     python 01_polygon_mask.py --demo
-    python 01_polygon_mask.py --input ../../../reference-repos/<your>.geojson --id-field GEEID
+    python 01_polygon_mask.py --input ../../reference-repos/<your>.geojson --id-field GEEID
 """
 
 from __future__ import annotations
