@@ -1,0 +1,366 @@
+/* The signed-out landing page at /.
+ *
+ * Structure and spacing follow LoopSpill's front door — 64px topbar, a two-up
+ * hero with an instrument panel, a four-bay pipeline strip, a hairline footer —
+ * so the two projects read as one body of work. The palette does not: LoopSpill
+ * is a blue radar instrument, this is a wetland, and the accent is the console's
+ * teal brightened for a dark ground.
+ *
+ * Scoped entirely under `.landing`. The existing `.frontdoor` rules in
+ * global.css belong to /welcome and are deliberately untouched.
+ *
+ * Dark in both themes. There is no theme toggle before sign-in, and the console
+ * behind it is light — the change of ground is the point at which you have
+ * arrived somewhere.
+ */
+.landing {
+  /* surfaces */
+  --ld-bg: #131313;
+  --ld-lowest: #0e0e0e;
+  --ld-border: rgba(255, 255, 255, 0.1);
+
+  /* ink — 14.4:1 and 11.1:1 on the ground */
+  --ld-ink: #e5e2e1;
+  --ld-ink-variant: #bdcbc8;
+
+  /* the one accent. The console's #0f6f6c reads at 3.1:1 here, which is a
+     failure; this is the same hue lifted to 10.5:1. */
+  --ld-primary: #2fd9c4;
+  --ld-primary-dim: #23a897;
+  --ld-on-primary: #04141c;
+
+  /* instrument greys: chrome, not data */
+  --ld-grid: rgba(255, 255, 255, 0.05);
+  --ld-ring: rgba(255, 255, 255, 0.07);
+  --ld-edge: rgba(255, 255, 255, 0.16);
+
+  --ld-gutter: 16px;
+  --ld-margin: 32px;
+  --ld-maxw: 1600px;
+
+  --ld-sans: var(--font);
+  --ld-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: 64px auto auto auto;
+  align-content: start;
+  background: var(--ld-bg);
+  color: var(--ld-ink);
+  font-family: var(--ld-sans);
+  color-scheme: dark;
+}
+
+/* --- top bar -------------------------------------------------------------- */
+.landing__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ld-gutter);
+  padding: 0 var(--ld-margin);
+  border-bottom: 1px solid var(--ld-border);
+  background: rgba(19, 19, 19, 0.8);
+}
+
+.landing__wordmark {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ld-primary);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Three bars at falling heights: a pond's water area over three seasons, which
+   is the one measurement this whole application is built on. */
+.landing__wordmark-mark {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 0.8rem;
+}
+
+.landing__wordmark-mark i { width: 2px; background: var(--ld-primary); }
+.landing__wordmark-mark i:nth-child(1) { height: 100%; }
+.landing__wordmark-mark i:nth-child(2) { height: 62%; }
+.landing__wordmark-mark i:nth-child(3) { height: 34%; }
+
+.landing__navcta {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 2px;
+  background: var(--ld-primary);
+  color: var(--ld-on-primary);
+  font-family: var(--ld-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background-color 120ms linear;
+}
+
+.landing__navcta:hover { background: #5ce6d5; }
+
+/* --- hero ----------------------------------------------------------------- */
+.landing__hero {
+  width: 100%;
+  max-width: var(--ld-maxw);
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 5rem) var(--ld-margin);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.landing__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+  min-width: 0;
+}
+
+.landing__headline {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(2rem, 3.6vw, 48px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.landing__lead {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--ld-ink-variant);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.landing__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+.landing__enter {
+  padding: 1rem 2rem;
+  border: 0;
+  border-radius: 2px;
+  background: var(--ld-primary);
+  color: var(--ld-on-primary);
+  font-family: var(--ld-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 120ms linear;
+}
+
+.landing__enter:hover { background: #5ce6d5; }
+
+.landing__secondary {
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--ld-border);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ld-ink);
+  font-family: var(--ld-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 120ms linear, color 120ms linear;
+}
+
+.landing__secondary:hover { border-color: var(--ld-primary); color: var(--ld-primary); }
+
+.landing__navcta:focus-visible,
+.landing__enter:focus-visible,
+.landing__secondary:focus-visible,
+.landing__footer-link:focus-visible {
+  outline: 2px solid var(--ld-primary);
+  outline-offset: 3px;
+}
+
+/* The architectural rule, as a HUD line rather than a card. */
+.landing__rule-line {
+  margin: 0;
+  max-width: 56ch;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--ld-border);
+  color: var(--ld-ink-variant);
+  font-family: var(--ld-mono);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.landing__rule-line span { color: var(--ld-primary); padding-right: 0.5rem; }
+
+/* --- the instrument panel ------------------------------------------------- */
+.landing__instrument {
+  margin: 0;
+  min-width: 0;
+  border: 1px solid var(--ld-border);
+  border-radius: 4px;
+  background: var(--ld-lowest);
+  overflow: hidden;
+}
+
+.landing__instrument-head,
+.landing__instrument-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  color: var(--ld-ink-variant);
+  font-family: var(--ld-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing__instrument-head { border-bottom: 1px solid var(--ld-border); }
+.landing__instrument-foot { border-top: 1px solid var(--ld-border); }
+.landing__instrument-head b { color: var(--ld-primary); font-weight: 500; }
+.landing__instrument svg { display: block; width: 100%; height: auto; }
+
+/* --- pipeline ------------------------------------------------------------- */
+.landing__flow {
+  width: 100%;
+  max-width: var(--ld-maxw);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 5vw, 4rem) var(--ld-margin) clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid var(--ld-border);
+}
+
+.landing__flow-title {
+  margin: 0 0 2.25rem;
+  color: var(--ld-primary);
+  font-family: var(--ld-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Hairline gaps rather than gutters: the steps read as one instrument split
+   into bays, which is what the pipeline is. */
+.landing__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--ld-border);
+  border: 1px solid var(--ld-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.landing__step { position: relative; padding: 1.5rem 1.35rem 1.75rem; background: var(--ld-lowest); }
+
+.landing__step::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--ld-primary);
+  opacity: 0.55;
+}
+
+.landing__step-no {
+  display: block;
+  margin-bottom: 0.9rem;
+  color: var(--ld-primary);
+  font-family: var(--ld-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.landing__step-name {
+  margin: 0 0 0.55rem;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.landing__step-detail { margin: 0; color: var(--ld-ink-variant); font-size: 14px; line-height: 22px; }
+
+/* --- honesty strip -------------------------------------------------------- */
+.landing__facts {
+  width: 100%;
+  max-width: var(--ld-maxw);
+  margin: 0 auto;
+  padding: 0 var(--ld-margin) clamp(3rem, 6vw, 5rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 3rem);
+}
+
+.landing__fact { min-width: 0; }
+
+.landing__fact dt {
+  margin: 0 0 0.4rem;
+  color: var(--ld-primary);
+  font-family: var(--ld-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing__fact dd { margin: 0; color: var(--ld-ink-variant); font-size: 14px; line-height: 22px; }
+
+/* --- footer --------------------------------------------------------------- */
+.landing__footer {
+  width: 100%;
+  max-width: var(--ld-maxw);
+  margin: 0 auto;
+  padding: 1.25rem var(--ld-margin);
+  border-top: 1px solid var(--ld-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--ld-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.landing__footer-mark { color: var(--ld-ink-variant); }
+
+.landing__footer-link {
+  color: var(--ld-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.landing__footer-link:hover { border-bottom-color: var(--ld-primary); }
+
+@media (max-width: 980px) {
+  .landing__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .landing__hero { grid-template-columns: minmax(0, 1fr); }
+  .landing__headline { max-width: none; }
+  .landing__facts { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .landing { --ld-margin: 20px; }
+  .landing__steps { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing__trace { animation: none; stroke-dashoffset: 0; }
+}
+
+@media (forced-colors: active) {
+  .landing__navcta,
+  .landing__enter,
+  .landing__secondary { border: 1px solid ButtonText; }
+}

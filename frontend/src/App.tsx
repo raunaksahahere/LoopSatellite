@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 
 import { RequireSession } from './components/auth/RequireSession'
+import { LandingPage } from './pages/LandingPage'
 import { SignOutButton } from './components/auth/SignOutButton'
 import { DashboardPage } from './pages/DashboardPage'
 import { DataSourcesPage } from './pages/DataSourcesPage'
@@ -13,20 +14,22 @@ import { useAsync } from './lib/useAsync'
 
 export default function App() {
   const { data: health } = useAsync(() => api.health(), [])
-  // The front door renders without the app shell. A signed-out visitor should
-  // not see a nav whose every link bounces them straight back here.
-  const atFrontDoor = useLocation().pathname === '/welcome'
+  // The homepage and the sign-in door both render without the app shell. A
+  // signed-out visitor should not see a nav whose every link bounces them
+  // straight back here.
+  const path = useLocation().pathname
+  const atFrontDoor = path === '/welcome' || path === '/'
 
   return (
     <div className="app">
       {!atFrontDoor && (
       <header className="appbar">
         <div className="appbar__inner">
-          <NavLink to="/" className="brand">
+          <NavLink to="/map" className="brand">
             LoopSatellite <small>EAST KOLKATA WETLANDS</small>
           </NavLink>
           <nav className="nav">
-            <NavLink to="/" end>
+            <NavLink to="/map" end>
               Map
             </NavLink>
             <NavLink to="/queue">
@@ -63,7 +66,11 @@ export default function App() {
 
       <main className="app__main" style={{ flex: 1 }}>
         <Routes>
-          {/* The front door. Public by definition — it is how you get in. */}
+          {/* The homepage. Public by definition — it is how somebody with no
+              account finds out what this is before deciding to want one. */}
+          <Route path="/" element={<LandingPage />} />
+
+          {/* The sign-in door. Also public: it is how you get in. */}
           <Route path="/welcome" element={<WelcomePage />} />
 
           {/* Public on purpose: it answers "how do we know this works on real
@@ -72,7 +79,7 @@ export default function App() {
           <Route path="/data-sources" element={<DataSourcesPage />} />
 
           <Route
-            path="/"
+            path="/map"
             element={
               <RequireSession>
                 <DashboardPage />

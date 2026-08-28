@@ -5,7 +5,7 @@ import { Back } from '../components/ui'
 export function QueuePage() {
   return (
     <div className="page">
-      <Back to="/">Back to the map</Back>
+      <Back to="/map">Back to the map</Back>
 
       <header className="page__head">
         <div className="row" style={{ justifyContent: 'space-between' }}>

@@ -23,7 +23,9 @@ import { Note } from '../components/ui'
 export function WelcomePage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const destination = (location.state as { from?: string } | null)?.from || '/'
+  // '/' is the public homepage now, so a successful sign-in must not land back
+  // on it — that reads as "nothing happened".
+  const destination = (location.state as { from?: string } | null)?.from || '/map'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

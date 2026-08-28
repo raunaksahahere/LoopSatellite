@@ -49,7 +49,7 @@ export function VerificationQueue() {
           <EmptyState
             title="No water loss flagged"
             action={
-              <Link className="btn" to="/">
+              <Link className="btn" to="/map">
                 Back to the map
               </Link>
             }

@@ -8,7 +8,7 @@ export function DataSourcesPage() {
 
   return (
     <div className="page">
-      <Back to="/">Back to the map</Back>
+      <Back to="/map">Back to the map</Back>
 
       <header className="page__head">
         <h1>How do we know this works on real data?</h1>
