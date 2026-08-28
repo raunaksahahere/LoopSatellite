@@ -5,7 +5,6 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "comment": "Client-side routing: /queue and /pond/:id are React Router paths, not files. Without this, refreshing or deep-linking either one 404s.",
       "source": "/((?!api|assets|precomputed|favicon|.*\\..*).*)",
       "destination": "/index.html"
     }
