@@ -18,8 +18,13 @@ services:
     envVars:
       - key: OPENROUTER_APP_NAME
         value: LoopSatellite
+      # tavily: real search results are fetched server-side and handed to the
+      # model, rather than trusting an :online model to retrieve well. Needs
+      # SEARCH_API_KEY. Set to "none" to switch evidence corroboration off.
       - key: SEARCH_PROVIDER
-        value: openrouter_online
+        value: tavily
+      - key: SEARCH_API_KEY
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: OPENROUTER_API_KEY
@@ -34,12 +39,17 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
-      # Sessions. AUTH_REQUIRED=true makes the app refuse to boot without an auth
-      # URL — a deployment that asked for auth and got none should fail loudly.
+      # Sessions. Left OFF: Managed Better Auth is not enabled on the Neon branch,
+      # and AUTH_REQUIRED=true with no NEON_AUTH_URL makes the app refuse to boot
+      # by design. The API therefore runs open and says so at /api/health, and the
+      # front door offers "Continue as demo" — which is how a judge gets in.
+      #
+      # To turn sign-in on later: enable Auth on the branch, set NEON_AUTH_URL
+      # here and VITE_NEON_AUTH_URL on Vercel, then flip AUTH_REQUIRED to "true".
       - key: NEON_AUTH_URL
         sync: false
       - key: AUTH_REQUIRED
-        value: "true"
+        value: "false"
 
 # NOTE on the slow path: `POST /api/areas` runs its job inside this web service
 # via FastAPI BackgroundTasks. Render's free tier sleeps on inactivity and would
