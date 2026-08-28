@@ -60,18 +60,42 @@ def _build_credentials(raw: str) -> Any:
             "contents of ~/.config/earthengine/credentials, on one line."
         ) from exc
 
-    missing = [k for k in ("refresh_token", "client_id", "client_secret") if not creds.get(k)]
-    if missing:
+    if not creds.get("refresh_token"):
         raise EarthEngineUnavailable(
-            f"EARTHENGINE_CREDENTIALS_JSON is missing {', '.join(missing)}. "
-            "Re-run `earthengine authenticate` and copy the file again."
+            "EARTHENGINE_CREDENTIALS_JSON has no refresh_token. It must be the entire "
+            "contents of ~/.config/earthengine/credentials, on one line. Re-run "
+            "`earthengine authenticate` if that file is missing or empty."
         )
+
+    # Current versions of `earthengine authenticate` write only refresh_token,
+    # scopes and redirect_uri — the OAuth client is the Earth Engine library's
+    # own, so the file has no client_id or client_secret to write. Requiring
+    # them rejected every credentials file produced in the last several releases
+    # with "re-run earthengine authenticate", which regenerates the same file.
+    #
+    # Fall back to the library's client, which is what the `ee` CLI itself uses
+    # against exactly these tokens. A file that does carry its own pair — an
+    # older one, or a custom OAuth app — still wins.
+    client_id = creds.get("client_id")
+    client_secret = creds.get("client_secret")
+    if not (client_id and client_secret):
+        try:
+            from ee import oauth
+
+            client_id = client_id or oauth.CLIENT_ID
+            client_secret = client_secret or oauth.CLIENT_SECRET
+        except (ImportError, AttributeError) as exc:
+            raise EarthEngineUnavailable(
+                "EARTHENGINE_CREDENTIALS_JSON has no client_id/client_secret and the "
+                "earthengine-api default OAuth client could not be read. Install the "
+                'pipeline extra: pip install -e ".[pipeline]"'
+            ) from exc
 
     return Credentials(
         token=None,
         refresh_token=creds["refresh_token"],
-        client_id=creds["client_id"],
-        client_secret=creds["client_secret"],
+        client_id=client_id,
+        client_secret=client_secret,
         token_uri=TOKEN_URI,
         scopes=creds.get("scopes"),
     )
