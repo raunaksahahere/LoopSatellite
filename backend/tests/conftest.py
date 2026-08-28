@@ -19,6 +19,13 @@ depended on what someone last warmed, which is not a test.
 So the cache is switched off here as well. The suite asserts the deterministic
 path, which is the one that has to be right when nothing else is available.
 `tests/test_llm_cache.py` exercises the cache itself against its own tmp_path.
+
+**Tests never call Earth Engine.** Same failure mode a third time: the moment
+EARTHENGINE_CREDENTIALS_JSON landed in .env, every `TestClient(app)` ran the
+startup hook, which authenticates against Google. That is a real network call
+that fails slowly, and there are dozens of TestClient setups — the suite went
+from 3 seconds to 112. Nothing here is meant to exercise Earth Engine; the one
+module that does is stubbed by its own test.
 """
 
 from __future__ import annotations
@@ -48,6 +55,20 @@ def isolate_from_live_llm() -> None:
     # Not just the key: a warm cache would make is_available() true and serve
     # model prose to tests that exist to check the fallback.
     settings.llm_cache_enabled = False
+
+
+@pytest.fixture(scope="session", autouse=True)
+def isolate_from_earth_engine() -> None:
+    """No credentials, so app startup skips the network entirely.
+
+    Cleared rather than monkeypatched over `try_initialize`, so the code path a
+    request takes when Earth Engine is unconfigured is the one under test — which
+    is also the path every deployment without a token takes.
+    """
+    settings = config.get_settings()
+    if os.environ.get("TEST_ALLOW_LIVE_GEE"):
+        return
+    settings.earthengine_credentials_json = None
 
 
 @pytest.fixture(scope="session", autouse=True)
