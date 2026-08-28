@@ -145,7 +145,17 @@ def headline(area: Area) -> str:
             f"{'loss' if area.anomaly_count == 1 else 'losses'} "
             f"across {area.pond_count} water bodies"
         )
-    return f"{where} — {area.pond_count} water bodies monitored, nothing flagged"
+    if area.pond_count:
+        return f"{where} — {area.pond_count} water bodies monitored, nothing flagged"
+    # Zero is a real answer and usually a correct one — most of Kolkata is not
+    # wetland. But "0 water bodies monitored" reads as a failure, and the officer
+    # cannot tell it apart from one without knowing the two filters involved.
+    return (
+        f"{where} — no permanent water bodies found here. Nothing at least half a "
+        f"hectare in size was open water more than half the time between 1984 and "
+        f"2021, which is what a dry street or a rooftop looks like. Try a larger "
+        f"radius, or a centre point nearer open water."
+    )
 
 
 def eta_note(area: Area) -> str | None:
