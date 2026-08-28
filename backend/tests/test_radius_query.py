@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.rag import gazetteer
-from app.services.detection import stl_esd
+from app.services.detection import repository, stl_esd
 from app.services.llm import nl_query
 
 EKW = gazetteer.resolve("East Kolkata Wetlands")
@@ -125,9 +125,27 @@ def test_an_administrative_label_is_not_read_as_a_place():
 
 
 def test_a_mouza_is_not_read_as_a_place():
-    parsed = nl_query.rule_parse("Chowbaga ponds that lost over 40 percent since 2024")
+    """Taken from the bundle rather than hardcoded. The locality names are real
+    now — they come from OpenStreetMap place nodes — so a name baked into the
+    test goes stale the moment the mask is refetched."""
+    mouza = next(m for m in repository.mouzas() if m not in gazetteer.names())
+    parsed = nl_query.rule_parse(f"{mouza} ponds that lost over 40 percent since 2024")
     assert "place" not in parsed
-    assert parsed["mouza"] == "Chowbaga"
+    assert parsed["mouza"] == mouza
+
+
+def test_a_block_name_inside_a_longer_place_name_is_not_claimed():
+    """Regression, and the reason the parser now lets a known place claim first.
+
+    The block list came from OpenStreetMap once the pond mask did, and it
+    contains "Kolkata" — which matches inside "East Kolkata Wetlands". The query
+    parsed as ward=Kolkata *and* place=East Kolkata Wetlands, the two filters
+    intersected to nothing, and the headline demo question returned zero results.
+    """
+    parsed = nl_query.rule_parse("problems around the East Kolkata Wetlands within 5 km")
+    assert parsed["place"] == "East Kolkata Wetlands"
+    assert "ward" not in parsed
+    assert "mouza" not in parsed
 
 
 def test_a_month_name_is_not_read_as_a_place():

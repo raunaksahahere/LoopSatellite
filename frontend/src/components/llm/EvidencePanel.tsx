@@ -33,8 +33,9 @@ export function EvidencePanel({
   return (
     <Card title="Is there a paper trail?">
       <p className="hint" style={{ marginTop: 0 }}>
-        Searches news reports, notices and public records for this mouza and this
-        period. Anything found is listed with its source so you can check it yourself.
+        Searches news reports, notices and public records for this locality and
+        this period. Anything found is listed with its source so you can check it
+        yourself.
       </p>
 
       {!llmConfigured && (

@@ -110,6 +110,14 @@ def adopt_real_mask(
     path: Path, id_field: str, ward_field: str | None, mouza_field: str | None, name_field: str | None
 ) -> dict[str, Any]:
     src = read_json(path)
+    # OpenStreetMap layers carry their licence with them. Recording the source
+    # here is what lets the app label these boundaries real and attribute them,
+    # rather than saying "digitised:some-file.geojson" and meaning nothing.
+    provenance = (
+        "openstreetmap"
+        if "OpenStreetMap" in str(src.get("attribution", ""))
+        else f"digitised:{path.name}"
+    )
     features = []
     for i, feat in enumerate(src.get("features", []), start=1):
         geom = feat.get("geometry")
@@ -122,10 +130,22 @@ def adopt_real_mask(
                 "type": "Feature",
                 "properties": {
                     "GEEID": gee_id,
-                    "name": props.get(name_field) if name_field else props.get("name") or gee_id,
+                    # Precedence matters: `a if c else b or d` binds as
+                    # `a if c else (b or d)`, so passing --name-field let an
+                    # unnamed feature through as None and the UI printed nothing.
+                    # Most real OSM ponds have no name tag, so this is the common
+                    # case, not the edge one.
+                    "name": (
+                        (props.get(name_field) if name_field else props.get("name"))
+                        or (f"Pond near {props['locality']}" if props.get("locality") else None)
+                        or gee_id
+                    ),
                     "mouza": props.get(mouza_field) if mouza_field else props.get("mouza"),
                     "ward": props.get(ward_field) if ward_field else props.get("ward"),
-                    "provenance": f"digitised:{path.name}",
+                    "provenance": provenance,
+                    # Kept so a boundary on screen can be traced back to the way or
+                    # relation it came from and checked on openstreetmap.org.
+                    **({"osm_ref": props["osm_ref"]} if props.get("osm_ref") else {}),
                 },
                 "geometry": geom,
             }
@@ -167,6 +187,11 @@ def main() -> None:
     )
     fc = annotate(fc)
     write_json(OUT_PATH, fc)
+
+    if args.input:
+        src_attr = read_json(args.input).get("attribution")
+        if src_attr:
+            fc["attribution"] = src_attr
 
     total_ha = sum(f["properties"]["polygon_area_m2"] for f in fc["features"]) / 10_000
     print(f"Wrote {len(fc['features'])} pond polygons -> {OUT_PATH}")

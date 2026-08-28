@@ -135,14 +135,26 @@ def provenance() -> dict[str, Any]:
                 f"{len(ponds)} placeholder bheri outlines laid on a jittered grid over "
                 f"the EKW extent. Not surveyed boundaries."
                 if pond_fallback
-                else f"{len(ponds)} digitised pond outlines ({', '.join(pond_sources)})."
+                else f"{len(ponds)} real pond outlines ({', '.join(pond_sources)})."
             ),
             "real_source": (
-                "A digitised EKW pond layer, passed to "
-                "`01_polygon_mask.py --input <layer>.geojson`"
+                "OpenStreetMap water and aquaculture polygons over the EKW extent, "
+                "fetched by `01a_fetch_osm_ponds.py` (Overpass) and adopted by "
+                "`01_polygon_mask.py --input`. © OpenStreetMap contributors, ODbL. "
+                "Any digitised layer can be passed the same way."
             ),
             "detail": pond_fallback
-            or "Real boundaries. Areas and centroids are computed from them.",
+            or (
+                "Real boundaries, traced from imagery by OpenStreetMap contributors — "
+                "not a cadastral or surveyed layer, so an edge is accurate to a few "
+                "metres and a pond may be missing or merged with its neighbour. That "
+                "is enough to measure change, because every month is measured inside "
+                "the same polygon and a constant boundary error cancels out of a loss "
+                "percentage. It is not enough to say where a boundary legally runs. "
+                "Block labels come from OpenStreetMap administrative relations; KMC "
+                "ward numbers are not mapped there, so they are left empty rather "
+                "than invented."
+            ),
         },
         {
             "key": "measurements",

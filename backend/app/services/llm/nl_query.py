@@ -141,23 +141,29 @@ def _parse_radius(question: str) -> float | None:
     return None
 
 
-def _parse_place(question: str, *, claimed: str = "") -> str | None:
-    """The place this question is about, or None.
+def _gazetteer_place(question: str) -> str | None:
+    """A known place name appearing literally in the question, longest first.
 
     Matching against the gazetteer directly is more robust than parsing
-    prepositions: the set of names we can actually answer for is small and known,
-    so we look for those first and only fall back to grammar for a name we do not
-    have. That fallback exists so we can say "we don't monitor Foo" rather than
-    silently ignoring the word.
-
-    `claimed` is the question with any ward and mouza spans blanked out. Without
-    that, "ponds in Ward 108" reads "Ward" as a place name and the whole query
-    collapses into "we have no coordinates for Ward".
+    prepositions: the set of names we can actually answer for is small and known.
+    Longest first so "Kolkata" does not win over "East Kolkata Wetlands".
     """
     for name in sorted(gazetteer.names(), key=len, reverse=True):
         if re.search(rf"(?<!\w){re.escape(name)}(?!\w)", question, re.IGNORECASE):
             return name
+    return None
 
+
+def _parse_place(question: str, *, claimed: str = "") -> str | None:
+    """A place this question is about that the gazetteer does NOT know.
+
+    Grammar, not lookup. This exists so we can say "we don't monitor Foo" rather
+    than silently ignoring the word.
+
+    `claimed` is the question with the gazetteer place, ward and mouza spans
+    blanked out. Without that, "ponds in Ward 108" reads "Ward" as a place name
+    and the whole query collapses into "we have no coordinates for Ward".
+    """
     match = _LOCATIVE_RE.search(claimed or question)
     if not match:
         return None
@@ -175,12 +181,21 @@ def _parse_place(question: str, *, claimed: str = "") -> str | None:
 
 def rule_parse(question: str) -> dict[str, Any]:
     f: dict[str, Any] = {}
-    # Ward and mouza get first claim on the text; whatever they match is blanked
-    # out before place parsing, so an administrative label can't be read as a
-    # settlement name.
+    # Every label claims its own span, longest and most specific first, and what
+    # it claims is blanked out before the next one looks.
+    #
+    # A known place name goes first. Real administrative labels are ordinary
+    # words that sit inside longer proper nouns: once the block list came from
+    # OpenStreetMap it contained "Kolkata", which matches inside "East Kolkata
+    # Wetlands" — so "problems around the East Kolkata Wetlands" parsed as
+    # ward=Kolkata AND place=East Kolkata Wetlands and returned nothing at all.
     claimed = question
 
-    if m := _WARD_RE.search(question):
+    if place := _gazetteer_place(question):
+        f["place"] = place
+        claimed = re.sub(rf"(?<!\w){re.escape(place)}(?!\w)", " ", claimed, flags=re.IGNORECASE)
+
+    if m := _WARD_RE.search(claimed):
         candidate = f"Ward {m.group(1)}"
         known = {w.lower(): w for w in repository.wards()}
         f["ward"] = known.get(candidate.lower(), candidate)
@@ -189,7 +204,7 @@ def rule_parse(question: str) -> dict[str, Any]:
         # and Sonarpur, which officers name directly. Longest match first so
         # "Bhangar-II" isn't swallowed by "Bhangar-I".
         for label in sorted(repository.wards(), key=len, reverse=True):
-            if re.search(rf"(?<![\w-]){re.escape(label)}(?![\w-])", question, re.IGNORECASE):
+            if re.search(rf"(?<![\w-]){re.escape(label)}(?![\w-])", claimed, re.IGNORECASE):
                 f["ward"] = label
                 break
 
@@ -201,13 +216,13 @@ def rule_parse(question: str) -> dict[str, Any]:
             flags=re.IGNORECASE,
         )
 
-    for mouza in repository.mouzas():
-        if re.search(rf"\b{re.escape(mouza)}\b", question, re.IGNORECASE):
+    for mouza in sorted(repository.mouzas(), key=len, reverse=True):
+        if re.search(rf"\b{re.escape(mouza)}\b", claimed, re.IGNORECASE):
             f["mouza"] = mouza
             claimed = re.sub(rf"\b{re.escape(mouza)}\b", " ", claimed, flags=re.IGNORECASE)
             break
 
-    if place := _parse_place(question, claimed=claimed):
+    if "place" not in f and (place := _parse_place(question, claimed=claimed)):
         f["place"] = place
 
     if (radius := _parse_radius(question)) is not None:

@@ -33,6 +33,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 MASK="work/ekw_ponds.geojson"
+OSM_PONDS="work/osm_ponds.geojson"
 EXPORTS_DIR="work/gee_exports"
 mkdir -p work
 
@@ -72,6 +73,14 @@ if [[ -n "$FORCE_DEMO" ]]; then
 elif [[ -n "$INPUT_LAYER" ]]; then
   note_real "$INPUT_LAYER"
   "$PY" 01_polygon_mask.py --input "$INPUT_LAYER"
+elif [[ -f "$OSM_PONDS" ]]; then
+  # Real boundaries, traced from imagery by OpenStreetMap contributors and
+  # fetched by 01a. Not a surveyed layer — but a real one, and good enough to
+  # measure change inside, which is all the detector needs. Preferred over a
+  # mask an earlier run synthesised.
+  note_real "$OSM_PONDS (OpenStreetMap, ODbL)"
+  "$PY" 01_polygon_mask.py --input "$OSM_PONDS" \
+    --ward-field block --mouza-field locality --name-field name
 elif [[ -f "$MASK" ]]; then
   # Reusing a mask is not the same as having a real one. If the mask on disk was
   # synthesised by an earlier run, say so again — silently calling it "real
@@ -86,7 +95,7 @@ elif [[ -f "$MASK" ]]; then
 else
   "$PY" 01_polygon_mask.py --demo
   note_fallback "01_polygon_mask" \
-    "no digitised pond layer: $MASK does not exist and --input was not given"
+    "no pond layer: run 01a_fetch_osm_ponds.py for real OpenStreetMap boundaries, or pass --input <layer.geojson>"
 fi
 
 echo "== 04 monthly composites"
