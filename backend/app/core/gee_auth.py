@@ -49,16 +49,42 @@ class EarthEngineUnavailable(RuntimeError):
     """Earth Engine is not configured, not installed, or refused the credentials."""
 
 
+def _unwrap(raw: str) -> str:
+    """Strip quoting that a .env file needs and a dashboard does not.
+
+    The value is full of double quotes, so a .env file has to wrap it in single
+    quotes or dotenv stops at the first one. Render's dashboard takes the value
+    literally — paste the same quoted string there and json.loads sees a leading
+    `'` and says "Expecting value", which reads like the credentials are corrupt
+    when they are perfect.
+
+    Both spellings are accepted here, because the difference is an artefact of
+    where the variable was typed and has nothing to do with the token.
+    """
+    value = raw.strip()
+    for quote in ("'", '"'):
+        if len(value) >= 2 and value[0] == quote and value[-1] == quote:
+            return value[1:-1].strip()
+    return value
+
+
 def _build_credentials(raw: str) -> Any:
     from google.oauth2.credentials import Credentials
 
     try:
-        creds = json.loads(raw)
+        creds = json.loads(_unwrap(raw))
     except json.JSONDecodeError as exc:
         raise EarthEngineUnavailable(
             "EARTHENGINE_CREDENTIALS_JSON is not valid JSON. It must be the entire "
-            "contents of ~/.config/earthengine/credentials, on one line."
+            "contents of ~/.config/earthengine/credentials. In a .env file wrap it "
+            "in single quotes; in a hosting dashboard paste it with no quotes at all."
         ) from exc
+
+    if not isinstance(creds, dict):
+        raise EarthEngineUnavailable(
+            "EARTHENGINE_CREDENTIALS_JSON parsed, but is not a JSON object. It must "
+            "be the whole credentials file, not one field from it."
+        )
 
     if not creds.get("refresh_token"):
         raise EarthEngineUnavailable(

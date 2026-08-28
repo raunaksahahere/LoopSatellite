@@ -56,6 +56,38 @@ def test_the_library_default_is_the_earth_engine_client():
     assert creds.client_secret == oauth.CLIENT_SECRET
 
 
+@pytest.mark.parametrize(
+    "wrapper",
+    [
+        "{raw}",          # a hosting dashboard: literal, no quotes
+        "'{raw}'",        # a .env file: single-quoted, or dotenv stops at the first "
+        '"{raw}"',
+        "  {raw}  ",
+        "{raw}\n",
+    ],
+)
+def test_quoting_from_either_place_is_accepted(wrapper):
+    """Regression, from a real failed deploy.
+
+    A .env file needs the value single-quoted because it is full of double
+    quotes. Render's dashboard takes it literally, so the same quoted string
+    arrives with a leading `'` and json.loads reports "Expecting value" — which
+    reads as corrupt credentials when they are perfect. The difference is an
+    artefact of where it was typed.
+    """
+    creds = gee_auth._build_credentials(wrapper.format(raw=json.dumps(MODERN)))
+    assert creds.refresh_token == MODERN["refresh_token"]
+
+
+@pytest.mark.parametrize("payload", ['["1//0gFAKE"]', "42"])
+def test_json_that_is_not_a_credentials_file_is_named_as_such(payload):
+    """Valid JSON of the wrong shape. Left unchecked it reaches .get() on a list
+    or an int and raises an AttributeError nobody can act on."""
+    with pytest.raises(gee_auth.EarthEngineUnavailable) as exc:
+        gee_auth._build_credentials(payload)
+    assert "not a JSON object" in str(exc.value)
+
+
 def test_a_missing_refresh_token_is_still_refused():
     """The one field we genuinely cannot substitute."""
     with pytest.raises(gee_auth.EarthEngineUnavailable) as exc:
