@@ -3,6 +3,26 @@
  "note": "Resolved at build time. The running service never calls Nominatim.",
  "places": [
   {
+   "name": "Alipurduar",
+   "query": "Alipurduar, West Bengal, India",
+   "lat": 26.4851573,
+   "lon": 89.5246926,
+   "display_name": "Alipurduar, Alipurduar - I, Alipurduar, West Bengal, 736121, India",
+   "osm_type": "node",
+   "osm_id": 568606431,
+   "source": "nominatim"
+  },
+  {
+   "name": "Arambagh",
+   "query": "Arambagh, West Bengal, India",
+   "lat": 22.8765856,
+   "lon": 87.7908631,
+   "display_name": "Arambagh, Arambag, Hooghly, West Bengal, 712600, India",
+   "osm_type": "node",
+   "osm_id": 245710349,
+   "source": "nominatim"
+  },
+  {
    "name": "Asansol",
    "query": "Asansol, West Bengal, India",
    "lat": 23.6871297,
@@ -10,6 +30,36 @@
    "display_name": "Asansol, Asansol Kulti Township, Paschim Bardhaman, West Bengal, India",
    "osm_type": "way",
    "osm_id": 22826418,
+   "source": "nominatim"
+  },
+  {
+   "name": "Baharampur",
+   "query": "Baharampur, West Bengal, India",
+   "lat": 24.1044927,
+   "lon": 88.2510635,
+   "display_name": "Berhampore, Murshidabad, West Bengal, 742101, India",
+   "osm_type": "node",
+   "osm_id": 245719504,
+   "source": "nominatim"
+  },
+  {
+   "name": "Balurghat",
+   "query": "Balurghat, West Bengal, India",
+   "lat": 25.2234352,
+   "lon": 88.7780654,
+   "display_name": "Balurghat, Dakshin Dinajpur, West Bengal, 733101, India",
+   "osm_type": "node",
+   "osm_id": 245730854,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bankura",
+   "query": "Bankura, West Bengal, India",
+   "lat": 23.132377,
+   "lon": 87.2081925,
+   "display_name": "Bankura, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 1971787,
    "source": "nominatim"
   },
   {
@@ -33,6 +83,86 @@
    "source": "nominatim"
   },
   {
+   "name": "Baruipur",
+   "query": "Baruipur, West Bengal, India",
+   "lat": 22.3607154,
+   "lon": 88.4325575,
+   "display_name": "Baruipur, Kolkata Metropolitan Area, Baruipur, South 24 Parganas, West Bengal, 700144, India",
+   "osm_type": "way",
+   "osm_id": 1138105859,
+   "source": "nominatim"
+  },
+  {
+   "name": "Basirhat",
+   "query": "Basirhat, West Bengal, India",
+   "lat": 22.6611962,
+   "lon": 88.8660215,
+   "display_name": "Basirhat, Basirhat - I, North 24 Parganas, West Bengal, 743411, India",
+   "osm_type": "node",
+   "osm_id": 245708650,
+   "source": "nominatim"
+  },
+  {
+   "name": "Berhampore",
+   "query": "Berhampore, West Bengal, India",
+   "lat": 24.1044927,
+   "lon": 88.2510635,
+   "display_name": "Berhampore, Murshidabad, West Bengal, 742101, India",
+   "osm_type": "node",
+   "osm_id": 245719504,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bhangar",
+   "query": "Bhangar, West Bengal, India",
+   "lat": 22.5636905,
+   "lon": 88.5734845,
+   "display_name": "Bhangar - II, South 24 Parganas, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10372370,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bidhannagar",
+   "query": "Bidhannagar, West Bengal, India",
+   "lat": 22.590425,
+   "lon": 88.41692,
+   "display_name": "Bidhannagar, Kolkata Metropolitan Area, Rajarhat, North 24 Parganas, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 1104715041,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bolpur",
+   "query": "Bolpur, West Bengal, India",
+   "lat": 23.661154,
+   "lon": 87.6962424,
+   "display_name": "Bolpur, Bolpur Sriniketan, Birbhum, West Bengal, 731204, India",
+   "osm_type": "node",
+   "osm_id": 2396422821,
+   "source": "nominatim"
+  },
+  {
+   "name": "Bongaon",
+   "query": "Bongaon, West Bengal, India",
+   "lat": 23.0569819,
+   "lon": 88.781352,
+   "display_name": "Bongaon, North 24 Parganas, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10372084,
+   "source": "nominatim"
+  },
+  {
+   "name": "Budge Budge",
+   "query": "Budge Budge, West Bengal, India",
+   "lat": 22.4736567,
+   "lon": 88.173933,
+   "display_name": "Budge Budge, Kolkata Metropolitan Area, Budge Budge - I, South 24 Parganas, West Bengal, 700137, India",
+   "osm_type": "way",
+   "osm_id": 1138594781,
+   "source": "nominatim"
+  },
+  {
    "name": "Canning",
    "query": "Canning, West Bengal, India",
    "lat": 22.310373,
@@ -40,6 +170,66 @@
    "display_name": "Canning, Canning - I, South 24 Parganas, West Bengal, 743329, India",
    "osm_type": "way",
    "osm_id": 1141917266,
+   "source": "nominatim"
+  },
+  {
+   "name": "Chandannagar",
+   "query": "Chandannagar, West Bengal, India",
+   "lat": 22.8639237,
+   "lon": 88.3703496,
+   "display_name": "Chandannagar, Kolkata Metropolitan Area, Singur, Hooghly, West Bengal, 712136, India",
+   "osm_type": "node",
+   "osm_id": 1672312671,
+   "source": "nominatim"
+  },
+  {
+   "name": "Chinsurah",
+   "query": "Chinsurah, West Bengal, India",
+   "lat": 22.8992251,
+   "lon": 88.3921337,
+   "display_name": "Hugli-Chuchura, Kolkata Metropolitan Area, Chinsurah - Magra, Hooghly, West Bengal, 712101, India",
+   "osm_type": "node",
+   "osm_id": 7156071805,
+   "source": "nominatim"
+  },
+  {
+   "name": "Contai",
+   "query": "Contai, West Bengal, India",
+   "lat": 21.7805923,
+   "lon": 87.7448286,
+   "display_name": "Contai, Contai-I, Purba Medinipur, West Bengal, 721401, India",
+   "osm_type": "node",
+   "osm_id": 245699585,
+   "source": "nominatim"
+  },
+  {
+   "name": "Cooch Behar",
+   "query": "Cooch Behar, West Bengal, India",
+   "lat": 26.2559197,
+   "lon": 89.4201143,
+   "display_name": "Cooch Behar, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 1789228,
+   "source": "nominatim"
+  },
+  {
+   "name": "Darjeeling",
+   "query": "Darjeeling, West Bengal, India",
+   "lat": 27.0377554,
+   "lon": 88.263176,
+   "display_name": "Darjeeling, Darjeeling Pulbazar, Darjeeling, West Bengal, 734101, India",
+   "osm_type": "node",
+   "osm_id": 3411073296,
+   "source": "nominatim"
+  },
+  {
+   "name": "Dhupguri",
+   "query": "Dhupguri, West Bengal, India",
+   "lat": 26.5889048,
+   "lon": 89.0069721,
+   "display_name": "Dhupguri, Jalpaiguri District, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 363829886,
    "source": "nominatim"
   },
   {
@@ -83,6 +273,16 @@
    "source": "nominatim"
   },
   {
+   "name": "Habra",
+   "query": "Habra, West Bengal, India",
+   "lat": 22.8400629,
+   "lon": 88.6630678,
+   "display_name": "Habra, Habra - I, North 24 Parganas, West Bengal, 743263, India",
+   "osm_type": "node",
+   "osm_id": 5662546609,
+   "source": "nominatim"
+  },
+  {
    "name": "Haldia",
    "query": "Haldia, West Bengal, India",
    "lat": 22.028124,
@@ -100,6 +300,76 @@
    "display_name": "Howrah, Kolkata Metropolitan Area, Howrah, West Bengal, India",
    "osm_type": "relation",
    "osm_id": 10371828,
+   "source": "nominatim"
+  },
+  {
+   "name": "Islampur",
+   "query": "Islampur, Uttar Dinajpur, West Bengal, India",
+   "lat": 26.2563651,
+   "lon": 88.1860517,
+   "display_name": "Islampur, Uttar Dinajpur, West Bengal, 733202, India",
+   "osm_type": "node",
+   "osm_id": 245745800,
+   "source": "nominatim"
+  },
+  {
+   "name": "Jalpaiguri",
+   "query": "Jalpaiguri, West Bengal, India",
+   "lat": 26.6262805,
+   "lon": 88.7334485,
+   "display_name": "Jalpaiguri District, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 556150,
+   "source": "nominatim"
+  },
+  {
+   "name": "Jhargram",
+   "query": "Jhargram, West Bengal, India",
+   "lat": 22.4538505,
+   "lon": 86.9949477,
+   "display_name": "Jhargram, West Bengal, 721507, India",
+   "osm_type": "node",
+   "osm_id": 4596625662,
+   "source": "nominatim"
+  },
+  {
+   "name": "Kalimpong",
+   "query": "Kalimpong, West Bengal, India",
+   "lat": 27.0702869,
+   "lon": 88.4723676,
+   "display_name": "Kalimpong, Kalimpong -I, Kalimpong, West Bengal, 734316, India",
+   "osm_type": "node",
+   "osm_id": 8599315953,
+   "source": "nominatim"
+  },
+  {
+   "name": "Kalna",
+   "query": "Kalna, West Bengal, India",
+   "lat": 23.2211183,
+   "lon": 88.3591889,
+   "display_name": "Kalna, Kalna - I, Purba Bardhaman, West Bengal, 713409, India",
+   "osm_type": "node",
+   "osm_id": 8936030366,
+   "source": "nominatim"
+  },
+  {
+   "name": "Kalyani",
+   "query": "Kalyani, West Bengal, India",
+   "lat": 22.9749723,
+   "lon": 88.4345915,
+   "display_name": "Kalyani City, Kolkata Metropolitan Area, Kalyani, Nadia, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 1094723487,
+   "source": "nominatim"
+  },
+  {
+   "name": "Katwa",
+   "query": "Katwa, West Bengal, India",
+   "lat": 23.644278,
+   "lon": 88.1287333,
+   "display_name": "Katwa, Katwa - I, Purba Bardhaman, West Bengal, 713130, India",
+   "osm_type": "node",
+   "osm_id": 245715096,
    "source": "nominatim"
   },
   {
@@ -143,6 +413,96 @@
    "source": "nominatim"
   },
   {
+   "name": "Mekliganj",
+   "query": "Mekliganj, West Bengal, India",
+   "lat": 26.3929142,
+   "lon": 88.8928167,
+   "display_name": "Mekliganj, Cooch Behar, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10360855,
+   "source": "nominatim"
+  },
+  {
+   "name": "Midnapore",
+   "query": "Midnapore, West Bengal, India",
+   "lat": 22.4207025,
+   "lon": 87.3269963,
+   "display_name": "Medinipur, Midnapore, Paschim Medinipur, West Bengal, 721101, India",
+   "osm_type": "node",
+   "osm_id": 245705238,
+   "source": "nominatim"
+  },
+  {
+   "name": "New Town",
+   "query": "New Town, Kolkata, West Bengal, India",
+   "lat": 22.5882834,
+   "lon": 88.4734476,
+   "display_name": "New Town, Kolkata Metropolitan Area, Rajarhat, North 24 Parganas, West Bengal, 700162, India",
+   "osm_type": "node",
+   "osm_id": 3320334805,
+   "source": "nominatim"
+  },
+  {
+   "name": "Purulia",
+   "query": "Purulia, West Bengal, India",
+   "lat": 23.2020967,
+   "lon": 86.3228988,
+   "display_name": "Purulia, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 1971789,
+   "source": "nominatim"
+  },
+  {
+   "name": "Raiganj",
+   "query": "Raiganj, West Bengal, India",
+   "lat": 25.6271966,
+   "lon": 88.1317967,
+   "display_name": "Raiganj, Uttar Dinajpur, West Bengal, 733134, India",
+   "osm_type": "node",
+   "osm_id": 569440509,
+   "source": "nominatim"
+  },
+  {
+   "name": "Rajarhat",
+   "query": "Rajarhat, West Bengal, India",
+   "lat": 22.6020231,
+   "lon": 88.4779972,
+   "display_name": "Rajarhat, North 24 Parganas, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10372171,
+   "source": "nominatim"
+  },
+  {
+   "name": "Ranaghat",
+   "query": "Ranaghat, West Bengal, India",
+   "lat": 23.1738124,
+   "lon": 88.563677,
+   "display_name": "Ranaghat, Ranaghat - II, Nadia, West Bengal, 741200, India",
+   "osm_type": "node",
+   "osm_id": 570082923,
+   "source": "nominatim"
+  },
+  {
+   "name": "Salt Lake City",
+   "query": "Salt Lake City, Kolkata, West Bengal, India",
+   "lat": 22.590425,
+   "lon": 88.41692,
+   "display_name": "Bidhannagar, Kolkata Metropolitan Area, Rajarhat, North 24 Parganas, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 1104715041,
+   "source": "nominatim"
+  },
+  {
+   "name": "Serampore",
+   "query": "Serampore, West Bengal, India",
+   "lat": 22.7549951,
+   "lon": 88.3416672,
+   "display_name": "Serampore, Kolkata Metropolitan Area, Serampur Uttarpara, Hooghly, West Bengal, 712201, India",
+   "osm_type": "node",
+   "osm_id": 3818050743,
+   "source": "nominatim"
+  },
+  {
    "name": "Siliguri",
    "query": "Siliguri, West Bengal, India",
    "lat": 26.7164127,
@@ -150,6 +510,56 @@
    "display_name": "Siliguri, Matigara block, Darjeeling, West Bengal, India",
    "osm_type": "way",
    "osm_id": 22826546,
+   "source": "nominatim"
+  },
+  {
+   "name": "Sonarpur",
+   "query": "Sonarpur, West Bengal, India",
+   "lat": 22.4441922,
+   "lon": 88.4325557,
+   "display_name": "Sonarpur, South 24 Parganas, West Bengal, India",
+   "osm_type": "relation",
+   "osm_id": 10372371,
+   "source": "nominatim"
+  },
+  {
+   "name": "Sundarbans",
+   "query": "Sundarbans, West Bengal, India",
+   "lat": 22.0315881,
+   "lon": 88.6873161,
+   "display_name": "Royal Sundarbans Wild Resort, Lot-126, Basanti, South 24 Parganas, West Bengal, India",
+   "osm_type": "way",
+   "osm_id": 1239071890,
+   "source": "nominatim"
+  },
+  {
+   "name": "Suri",
+   "query": "Suri, Birbhum, West Bengal, India",
+   "lat": 23.9080538,
+   "lon": 87.5277255,
+   "display_name": "Siuri, Suri - I, Birbhum, West Bengal, 731101, India",
+   "osm_type": "node",
+   "osm_id": 569602058,
+   "source": "nominatim"
+  },
+  {
+   "name": "Tamluk",
+   "query": "Tamluk, West Bengal, India",
+   "lat": 22.2896984,
+   "lon": 87.9255933,
+   "display_name": "Tamluk, Purba Medinipur, West Bengal, 721600, India",
+   "osm_type": "node",
+   "osm_id": 733558788,
+   "source": "nominatim"
+  },
+  {
+   "name": "Uluberia",
+   "query": "Uluberia, West Bengal, India",
+   "lat": 22.4700318,
+   "lon": 88.1011108,
+   "display_name": "Uluberia, Kolkata Metropolitan Area, Uluberia - I, Howrah, West Bengal, 711315, India",
+   "osm_type": "node",
+   "osm_id": 570047175,
    "source": "nominatim"
   }
  ]

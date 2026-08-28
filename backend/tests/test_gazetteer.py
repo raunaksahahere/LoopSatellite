@@ -15,9 +15,13 @@ def test_seed_places_were_resolved():
 
 
 def test_coordinates_are_in_west_bengal():
+    """West Bengal's real extent, not the box that happened to fit the first
+    fifteen seed places. The state runs to roughly 89.9E in Cooch Behar and
+    Alipurduar — an eastern bound of 89.5 rejected Alipurduar at 89.52, which is
+    correctly geocoded and genuinely in the state."""
     for place in gazetteer.all_places():
-        assert 21.0 < place.lat < 27.5, place
-        assert 85.5 < place.lon < 89.5, place
+        assert 21.4 < place.lat < 27.3, place
+        assert 85.7 < place.lon < 90.0, place
 
 
 @pytest.mark.parametrize(

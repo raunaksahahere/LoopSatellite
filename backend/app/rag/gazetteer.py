@@ -41,10 +41,26 @@ REQUEST_INTERVAL_S = 1.1
 
 # Places a West Bengal officer might plausibly ask about. Resolved once.
 SEED_PLACES: list[str] = [
+    # The study area itself, and the city it sits inside.
     "East Kolkata Wetlands, West Bengal, India",
     "Kolkata, West Bengal, India",
-    "Haldia, West Bengal, India",
+    "Salt Lake City, Kolkata, West Bengal, India",
+    "New Town, Kolkata, West Bengal, India",
+    "Rajarhat, West Bengal, India",
+    "Bhangar, West Bengal, India",
+    "Sonarpur, West Bengal, India",
+    "Bidhannagar, West Bengal, India",
+
+    # Other Ramsar and wetland-adjacent sites in the state. A question about
+    # water loss is not only a question about the EKW.
+    "Sundarbans, West Bengal, India",
+    "Santragachi Jheel, Howrah, West Bengal, India",
+    "Rasikbil, Cooch Behar, West Bengal, India",
+    "Ahiron Beel, Murshidabad, West Bengal, India",
+
+    # District and divisional headquarters — the places an officer names.
     "Howrah, West Bengal, India",
+    "Haldia, West Bengal, India",
     "Kharagpur, West Bengal, India",
     "Durgapur, West Bengal, India",
     "Asansol, West Bengal, India",
@@ -56,6 +72,40 @@ SEED_PLACES: list[str] = [
     "Barasat, West Bengal, India",
     "Diamond Harbour, West Bengal, India",
     "Canning, West Bengal, India",
+    "Baharampur, West Bengal, India",
+    "Berhampore, West Bengal, India",
+    "Raiganj, West Bengal, India",
+    "Balurghat, West Bengal, India",
+    "Jalpaiguri, West Bengal, India",
+    "Cooch Behar, West Bengal, India",
+    "Alipurduar, West Bengal, India",
+    "Darjeeling, West Bengal, India",
+    "Kalimpong, West Bengal, India",
+    "Purulia, West Bengal, India",
+    "Bankura, West Bengal, India",
+    "Suri, Birbhum, West Bengal, India",
+    "Tamluk, West Bengal, India",
+    "Contai, West Bengal, India",
+    "Jhargram, West Bengal, India",
+    "Midnapore, West Bengal, India",
+    "Serampore, West Bengal, India",
+    "Chandannagar, West Bengal, India",
+    "Chinsurah, West Bengal, India",
+    "Kalyani, West Bengal, India",
+    "Ranaghat, West Bengal, India",
+    "Basirhat, West Bengal, India",
+    "Bongaon, West Bengal, India",
+    "Habra, West Bengal, India",
+    "Baruipur, West Bengal, India",
+    "Budge Budge, West Bengal, India",
+    "Uluberia, West Bengal, India",
+    "Arambagh, West Bengal, India",
+    "Katwa, West Bengal, India",
+    "Kalna, West Bengal, India",
+    "Bolpur, West Bengal, India",
+    "Islampur, Uttar Dinajpur, West Bengal, India",
+    "Dhupguri, West Bengal, India",
+    "Mekliganj, West Bengal, India",
 ]
 
 # Match threshold for difflib. Below this, we would rather say "not found" than
