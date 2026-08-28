@@ -1,55 +1,47 @@
+import { SignIn, SignUp } from '@clerk/clerk-react'
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 
-import { authConfigured, beginDemoSession, signInWithPassword } from '../lib/auth'
-import { Note } from '../components/ui'
+import { authConfigured } from '../lib/auth'
+import { useSession } from '../lib/session'
+import { Loading, Note } from '../components/ui'
 
 /**
- * The front door.
+ * The sign-in door at /welcome.
  *
- * Two ways in, and which ones appear depends on the deployment:
+ * One way in, and it has two halves: sign in, or create an account. The
+ * "Continue as demo" button that used to sit here is gone. It existed because a
+ * visitor with no account had no way in at all; Clerk offers sign-up, so the
+ * reason is gone — and with it a header that let anyone read the entire API
+ * without ever having an account.
  *
- *   Sign in         a real operator. Can record verifications and start
- *                   monitoring new areas.
- *   Continue as demo  read everything, write nothing. Shown when sign-in is not
- *                   configured, because a deployment with no auth server and no
- *                   way in would be a locked building with the keys inside.
+ * The public homepage at / is what a visitor sees before this, and it explains
+ * the product. This page has one job.
  *
- * The demo door is not a hole. `backend/app/core/auth.py` gives it a distinct
- * read-only principal and refuses it on the two routes that cost something:
- * recording a verdict, and submitting an area — which spends Earth Engine quota
- * against a personal token.
+ * Accessibility is Clerk's here rather than ours: <SignIn /> ships a labelled,
+ * keyboard-navigable form with its own error handling, and reimplementing that
+ * around their API would be a worse form with the same behaviour.
  */
 export function WelcomePage() {
-  const navigate = useNavigate()
   const location = useLocation()
-  // '/' is the public homepage now, so a successful sign-in must not land back
-  // on it — that reads as "nothing happened".
+  const { status } = useSession()
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
+
+  // '/' is the public homepage, so a successful sign-in must not land back on
+  // it — that reads as "nothing happened".
   const destination = (location.state as { from?: string } | null)?.from || '/map'
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      await signInWithPassword(email, password)
-      navigate(destination, { replace: true })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign you in.')
-    } finally {
-      setBusy(false)
-    }
+  if (status === 'loading') {
+    return (
+      <main className="frontdoor">
+        <div className="frontdoor__panel">
+          <Loading label="Checking your session" rows={2} />
+        </div>
+      </main>
+    )
   }
 
-  function enterDemo() {
-    beginDemoSession()
-    navigate(destination, { replace: true })
-  }
+  if (status === 'signed-in') return <Navigate to={destination} replace />
 
   return (
     <main className="frontdoor">
@@ -61,79 +53,57 @@ export function WelcomePage() {
           April and one that shrank because someone filled it in.
         </p>
 
-        {authConfigured ? (
-          <>
-            <form className="frontdoor__form" onSubmit={submit} noValidate>
-              <label className="label" htmlFor="signin-email">
-                Email
-              </label>
-              <input
-                id="signin-email"
-                className="input"
-                type="email"
-                autoComplete="username"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                aria-invalid={error ? true : undefined}
-              />
-
-              <label className="label" htmlFor="signin-password" style={{ marginTop: '0.7rem' }}>
-                Password
-              </label>
-              <input
-                id="signin-password"
-                className="input"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              {error && (
-                <div style={{ marginTop: '0.75rem' }}>
-                  <Note tone="error">{error}</Note>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="btn btn--primary btn--block"
-                style={{ marginTop: '1rem' }}
-                disabled={busy}
-              >
-                {busy ? 'Signing in…' : 'Sign in'}
-              </button>
-            </form>
-
-            <button type="button" className="frontdoor__demo" onClick={enterDemo}>
-              Continue as demo
-            </button>
-            <p className="frontdoor__note">
-              A demo session sees every finding but cannot record a review or start
-              monitoring a new area.
-            </p>
-          </>
+        {!authConfigured ? (
+          <Note tone="warn">
+            Sign-in is not configured on this deployment, so the API is running
+            open. Set <code>VITE_CLERK_PUBLISHABLE_KEY</code> here and{' '}
+            <code>CLERK_ISSUER</code> on the API to switch it on.
+          </Note>
         ) : (
           <>
-            <p className="frontdoor__note" role="status">
-              Sign-in is not configured on this deployment, so everything runs in
-              demo mode.
-            </p>
-            <button
-              type="button"
-              className="btn btn--primary btn--block"
-              style={{ marginTop: '1rem' }}
-              onClick={enterDemo}
-            >
-              Continue as demo
-            </button>
+            <div className="frontdoor__tabs" role="tablist" aria-label="Sign in or create an account">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'sign-in'}
+                className={mode === 'sign-in' ? 'is-active' : ''}
+                onClick={() => setMode('sign-in')}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'sign-up'}
+                className={mode === 'sign-up' ? 'is-active' : ''}
+                onClick={() => setMode('sign-up')}
+              >
+                Create an account
+              </button>
+            </div>
+
+            <div className="frontdoor__clerk">
+              {mode === 'sign-in' ? (
+                <SignIn
+                  routing="virtual"
+                  signUpUrl="/welcome"
+                  forceRedirectUrl={destination}
+                  appearance={{ elements: { rootBox: { width: '100%' } } }}
+                />
+              ) : (
+                <SignUp
+                  routing="virtual"
+                  signInUrl="/welcome"
+                  forceRedirectUrl={destination}
+                  appearance={{ elements: { rootBox: { width: '100%' } } }}
+                />
+              )}
+            </div>
           </>
         )}
 
-        <Link className="frontdoor__aside" to="/data-sources">
-          How do we know this works on real data? →
+        <Link className="frontdoor__aside" to="/">
+          ← What is this?
         </Link>
       </div>
     </main>

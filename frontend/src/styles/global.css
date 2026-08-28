@@ -616,3 +616,52 @@ input[type='range'] { accent-color: var(--accent); }
   text-decoration: none;
 }
 .frontdoor__aside:hover { text-decoration: underline; }
+
+/* --- sign-in door: Clerk tabs ---------------------------------------------
+   The demo button that used to sit under the form is gone; these two tabs
+   replace it. Sign-up is a peer of sign-in, not a link buried underneath —
+   somebody arriving from the homepage is at least as likely to need an account
+   as to have one. */
+.frontdoor__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 1.4rem 0 1rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.frontdoor__tabs button {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.frontdoor__tabs button.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.frontdoor__tabs button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Clerk ships its own card chrome. Ours is already the card, so let theirs be
+   plain and stop the two borders nesting. */
+.frontdoor__clerk { display: flex; justify-content: center; }
+.frontdoor__clerk .cl-rootBox,
+.frontdoor__clerk .cl-card {
+  width: 100%;
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}

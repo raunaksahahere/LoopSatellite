@@ -111,15 +111,29 @@ class Settings(BaseSettings):
     search_provider: str = "tavily"
     search_api_key: str | None = None
 
-    # --- Sessions (Neon Managed Better Auth) ----------------------------
-    # The auth URL Neon prints once Auth is enabled on the branch, e.g.
-    #   https://ep-xxx.neon.tech/neondb/auth
-    # Blank means auth is not configured: the API runs open and says so at
-    # startup and in /api/health. That is a local state, not a deployed one.
-    neon_auth_url: str | None = None
-    # Set true on a deployment. The app then refuses to boot without an auth URL,
+    # --- Sessions (Clerk) -----------------------------------------------
+    # The Frontend API origin Clerk prints for the instance, e.g.
+    #   https://sound-pelican-42.clerk.accounts.dev
+    # It is the `iss` of every token Clerk issues and the root of its JWKS. Blank
+    # means auth is not configured: the API runs open and says so at startup and
+    # in /api/health. That is a local state, not a deployed one.
+    clerk_issuer: str | None = None
+    # Override only if Clerk ever moves the path. Derived from the issuer.
+    clerk_jwks_url: str | None = None
+    # Optional but recommended on a deployment: Clerk puts the origin the token
+    # was minted for in `azp`. Setting this refuses a token lifted from your
+    # instance and replayed from someone else's page. Comma-separated.
+    clerk_authorized_parties: str = ""
+    # Set true on a deployment. The app then refuses to boot unconfigured,
     # rather than quietly serving everything to everyone.
     auth_required: bool = False
+
+    # --- Earth Engine quota, per signed-in user -------------------------
+    # POST /api/areas spends a personal Earth Engine OAuth quota, and any signed-in
+    # user may call it. These caps are what stops one account draining it. Counted
+    # over a rolling 24 hours against the Clerk user id. 0 disables a cap.
+    area_quota_per_user_per_day: int = 3
+    area_quota_per_day: int = 20
 
     # --- Google Earth Engine (offline pipeline + the slow area path) -----
     # Personal OAuth refresh token, not a service account. The whole contents of
@@ -161,7 +175,17 @@ class Settings(BaseSettings):
 
     @property
     def auth_configured(self) -> bool:
-        return bool(self.neon_auth_url)
+        return bool(self.clerk_issuer)
+
+    @property
+    def clerk_jwks(self) -> str:
+        if self.clerk_jwks_url:
+            return self.clerk_jwks_url
+        return f"{(self.clerk_issuer or '').rstrip('/')}/.well-known/jwks.json"
+
+    @property
+    def authorized_party_list(self) -> list[str]:
+        return [p.strip() for p in self.clerk_authorized_parties.split(",") if p.strip()]
 
     @property
     def gee_configured(self) -> bool:

@@ -2,7 +2,7 @@
 
 No network. A throwaway RSA key is generated per session and `_jwk_client` is
 stubbed to hand back its public half, so tokens are signed and verified for real
-without Neon being involved.
+without Clerk being involved.
 
 The test that matters most is the last one: it walks the live application and
 fails if any data route is reachable without a session. Protecting a route is a
@@ -23,8 +23,7 @@ from app.core import auth
 from app.core.config import get_settings
 from app.main import app
 
-AUTH_URL = "https://ep-test.neon.tech/neondb/auth"
-DEMO = {auth.DEMO_HEADER: auth.DEMO_HEADER_VALUE}
+ISSUER = "https://sound-pelican-42.clerk.accounts.dev"
 
 #: Reachable with no session at all. Everything else needs one.
 PUBLIC_PATHS = ("/api/health", "/api/manifest", "/api/provenance")
@@ -43,10 +42,12 @@ def keypair():
 
 @pytest.fixture
 def configured(monkeypatch, keypair):
-    """Auth switched on, with our own key standing in for Neon's JWKS."""
+    """Auth switched on, with our own key standing in for Clerk's JWKS."""
     key, _ = keypair
     settings = get_settings()
-    monkeypatch.setattr(settings, "neon_auth_url", AUTH_URL)
+    monkeypatch.setattr(settings, "clerk_issuer", ISSUER)
+    monkeypatch.setattr(settings, "clerk_jwks_url", None)
+    monkeypatch.setattr(settings, "clerk_authorized_parties", "")
 
     class _SigningKey:
         def __init__(self, public_key):
@@ -69,7 +70,7 @@ def signed(keypair):
         import jwt
 
         claims = {
-            "sub": "officer-1",
+            "sub": "user_2abcDEF",
             "email": "officer@example.gov.in",
             "iss": auth.issuer(),
             "exp": int(time.time()) + 600,
@@ -142,37 +143,27 @@ def test_the_rejection_does_not_say_why(api, configured, signed):
 
 
 # ---------------------------------------------------------------------------
-# The demo door
+# There is no demo door any more
 # ---------------------------------------------------------------------------
-def test_a_demo_session_can_read_everything(api, configured):
-    """A judge should see the whole product without an account."""
-    for path in ("/api/ponds", "/api/queue", "/api/anomalies"):
-        assert api.get(path, headers=DEMO).status_code == 200, path
+def test_the_demo_header_no_longer_opens_anything(api, configured):
+    """Regression. Reads used to be reachable by anyone who sent one header and
+    never signed in. Clerk offers sign-up, so the reason for that door is gone —
+    and a header that still worked would be the whole auth system's back wall
+    missing."""
+    for header in ("x-loopsatellite-demo", "X-LoopSatellite-Demo"):
+        response = api.get("/api/ponds", headers={header: "session"})
+        assert response.status_code == 401, f"{header} still let a request through"
+        assert "features" not in response.text
 
 
-def test_a_demo_session_cannot_record_a_review(api, configured):
-    response = api.post(
-        "/api/queue/EKW_00032-2024-12/verify", headers=DEMO, json={"outcome": "unclear"}
-    )
-    assert response.status_code == 403
-    assert "demo" in response.json()["detail"].lower()
-
-
-def test_a_demo_session_cannot_submit_an_area(api, configured):
-    """The expensive one: submitting an area spends Earth Engine quota against a
-    personal token. That is the hole the demo door must not leave open."""
-    response = api.post(
-        "/api/areas",
-        headers=DEMO,
-        json={"name": "Haldia", "lat": 22.028, "lon": 88.063, "radius_km": 5},
-    )
-    assert response.status_code == 403
-    assert "demo" in response.json()["detail"].lower()
+def test_no_demo_symbols_survive_in_the_auth_module():
+    """The header, its value, and the read-only principal are gone — not merely
+    unused. A dormant demo path is one import away from being live again."""
+    for name in ("DEMO_HEADER", "DEMO_HEADER_VALUE", "is_demo_request"):
+        assert not hasattr(auth, name), f"auth.{name} is still defined"
 
 
 def test_a_real_session_may_write(api, configured, signed):
-    """Guards the guard: if writes 403'd for everyone the tests above would pass
-    while the feature was broken."""
     response = api.post(
         "/api/areas",
         headers={"Authorization": f"Bearer {signed()}"},
@@ -180,12 +171,39 @@ def test_a_real_session_may_write(api, configured, signed):
     )
     # 503 because no DATABASE_URL in tests — the point is it got past the guard.
     assert response.status_code != 403
+    assert response.status_code != 401
 
 
-def test_the_demo_door_works_even_when_auth_is_configured(api, configured):
-    """Deliberate. A judge opens the deployed URL and uses the read path."""
-    assert auth.is_configured()
-    assert api.get("/api/ponds", headers=DEMO).status_code == 200
+def test_an_anonymous_write_is_refused(api, configured):
+    """The expensive one: submitting an area spends Earth Engine quota against a
+    personal token."""
+    response = api.post(
+        "/api/areas",
+        json={"name": "Haldia", "lat": 22.028, "lon": 88.063, "radius_km": 5},
+    )
+    assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Authorized party (azp)
+# ---------------------------------------------------------------------------
+def test_a_token_for_another_origin_is_refused_when_azp_is_configured(
+    api, configured, signed, monkeypatch
+):
+    """Clerk stamps the origin a token was minted for into `azp`. Without this
+    check, a token lifted from our instance works from anyone's page."""
+    monkeypatch.setattr(configured, "clerk_authorized_parties", "https://loopsatellite.vercel.app")
+    good = signed(azp="https://loopsatellite.vercel.app")
+    bad = signed(azp="https://evil.example.com")
+    assert api.get("/api/ponds", headers={"Authorization": f"Bearer {good}"}).status_code == 200
+    assert api.get("/api/ponds", headers={"Authorization": f"Bearer {bad}"}).status_code == 401
+
+
+def test_azp_is_not_checked_when_it_is_not_configured(api, configured, signed):
+    """Default deployment state. Checking a claim we were never told to expect
+    would lock out every correctly-issued token."""
+    token = signed(azp="https://anything.example.com")
+    assert api.get("/api/ponds", headers={"Authorization": f"Bearer {token}"}).status_code == 200
 
 
 # ---------------------------------------------------------------------------
@@ -206,31 +224,35 @@ def test_provenance_is_public_on_purpose(api, configured):
 def test_health_reports_the_auth_state(api, configured):
     state = api.get("/api/health").json()["auth"]
     assert state["configured"] is True
-    assert state["provider"] == "neon-managed-better-auth"
+    assert state["provider"] == "clerk"
 
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-def test_with_no_auth_url_the_api_is_open_and_says_so(api):
+def test_with_no_issuer_the_api_is_open_and_says_so(api):
     assert not auth.is_configured()
     assert api.get("/api/ponds").status_code == 200
     note = api.get("/api/health").json()["auth"]["note"]
     assert "every api route is open" in note.lower()
 
 
-def test_auth_required_without_a_url_refuses_to_boot(monkeypatch):
+def test_auth_required_without_an_issuer_refuses_to_boot(monkeypatch):
     settings = get_settings()
     monkeypatch.setattr(settings, "auth_required", True)
-    monkeypatch.setattr(settings, "neon_auth_url", None)
+    monkeypatch.setattr(settings, "clerk_issuer", None)
     with pytest.raises(auth.AuthNotConfigured):
         auth.check_startup()
 
 
 def test_the_jwks_url_and_issuer_come_from_one_setting(monkeypatch):
-    monkeypatch.setattr(get_settings(), "neon_auth_url", "https://ep-x.neon.tech/db/auth/")
-    assert auth.jwks_url() == "https://ep-x.neon.tech/db/auth/.well-known/jwks.json"
-    assert auth.issuer() == "https://ep-x.neon.tech"
+    settings = get_settings()
+    monkeypatch.setattr(settings, "clerk_issuer", "https://sound-pelican-42.clerk.accounts.dev/")
+    monkeypatch.setattr(settings, "clerk_jwks_url", None)
+    assert auth.jwks_url() == (
+        "https://sound-pelican-42.clerk.accounts.dev/.well-known/jwks.json"
+    )
+    assert auth.issuer() == "https://sound-pelican-42.clerk.accounts.dev"
 
 
 # ---------------------------------------------------------------------------

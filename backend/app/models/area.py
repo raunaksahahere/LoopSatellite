@@ -40,7 +40,10 @@ class Area(Base):
 
     pond_count: Mapped[int] = mapped_column(Integer, default=0)
     anomaly_count: Mapped[int] = mapped_column(Integer, default=0)
+    # What the client typed. Display only — unverified, and never counted against.
     requested_by: Mapped[str | None] = mapped_column(String(255))
+    # The Clerk user id off the token. This is the one the quota counts.
+    submitted_by: Mapped[str | None] = mapped_column(String(255), index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

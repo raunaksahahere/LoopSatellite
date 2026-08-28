@@ -11,10 +11,10 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 
-from app.core.auth import WritableSession
+from app.core.auth import Principal, WritableSession
 from app.core.gee_auth import status as gee_status
 from app.schemas.area import AreaCreate, AreaList, AreaOut
-from app.services import areas
+from app.services import areas, quota
 from app.services.area_processing import process_area
 
 router = APIRouter(prefix="/api/areas", tags=["areas"])
@@ -33,20 +33,38 @@ def _unavailable(exc: areas.AreasUnavailable) -> HTTPException:
 async def submit_area(
     payload: AreaCreate,
     background: BackgroundTasks,
-    _principal=WritableSession,
+    principal: Principal | None = WritableSession,
 ) -> dict[str, Any]:
     """202, not 201: the work has been accepted, not completed.
 
     The centre and radius become a geodesic circle server-side. Poll
     GET /api/areas/{id} for progress.
+
+    Any signed-in user may call this. It is also the one route that spends money —
+    a real satellite pull against a personal Earth Engine token — so it is capped
+    per person and per deployment before anything is written. 429 with Retry-After
+    when the cap is reached, never a silent refusal.
     """
+    user_id = principal.user_id if principal else None
+    try:
+        await quota.check(user_id)
+    except quota.QuotaExceeded as exc:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+            headers={"Retry-After": str(exc.retry_after_seconds)},
+        ) from exc
+
     try:
         area = await areas.create(
             name=payload.name,
             lat=payload.lat,
             lon=payload.lon,
             radius_km=payload.radius_km,
-            requested_by=payload.requested_by,
+            # Who they say they are, versus who the token says they are. Only the
+            # second is counted against a quota.
+            requested_by=payload.requested_by or (principal.label if principal else None),
+            submitted_by=user_id,
         )
     except areas.AreasUnavailable as exc:
         raise _unavailable(exc) from exc
@@ -67,8 +85,13 @@ async def list_areas(limit: int = Query(50, ge=1, le=200)) -> dict[str, Any]:
 
 
 @router.get("/capability", summary="Can this server process a new area at all?")
-def capability() -> dict[str, Any]:
-    """Let the UI disable the button honestly instead of failing on submit."""
+async def capability(principal: Principal | None = WritableSession) -> dict[str, Any]:
+    """Let the UI disable the button honestly instead of failing on submit.
+
+    Reports the caller's remaining allowance as well, so the button can say "2 of
+    3 left today" rather than letting them write a name and a radius and then
+    discover the cap on submit.
+    """
     from app.core.config import settings
 
     gee = gee_status()
@@ -84,6 +107,7 @@ def capability() -> dict[str, Any]:
         "can_submit": can,
         "reason": reason,
         "earth_engine": gee,
+        "quota": await quota.usage(principal.user_id if principal else None),
         "typical_duration": "several minutes",
         "why_slow": (
             "Telling a filled-in pond apart from one that is simply between seasons "

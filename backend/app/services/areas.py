@@ -53,7 +53,12 @@ def new_id() -> str:
 
 
 async def create(
-    name: str, lat: float, lon: float, radius_km: float, requested_by: str | None = None
+    name: str,
+    lat: float,
+    lon: float,
+    radius_km: float,
+    requested_by: str | None = None,
+    submitted_by: str | None = None,
 ) -> dict[str, Any]:
     _require_db()
     geometry = circle_polygon(lon, lat, radius_km)
@@ -68,6 +73,7 @@ async def create(
         status="pending",
         progress="Queued",
         requested_by=requested_by,
+        submitted_by=submitted_by,
     )
     async with get_sessionmaker()() as session:
         session.add(area)

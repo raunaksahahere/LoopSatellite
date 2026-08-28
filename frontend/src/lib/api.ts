@@ -36,8 +36,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        // A demo tab sends the demo header; a signed-in operator sends a bearer
-        // token. Read fresh per request — a cached token expires mid-session.
+        // A signed-in user sends a Clerk bearer token; nobody else sends
+        // anything. Read fresh per request — Clerk's tokens are short-lived by
+        // design and a cached one is a 401 mid-session.
         ...(await sessionHeaders()),
         ...(init?.headers ?? {}),
       },

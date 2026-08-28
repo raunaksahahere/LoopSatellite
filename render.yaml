@@ -3,6 +3,8 @@
 # Secrets are NOT in this file. Set them in the Render dashboard:
 #   DATABASE_URL                 Neon connection string, pasted as Neon prints it
 #   GEMINI_API_KEY               Google AI Studio key (aistudio.google.com/apikey)
+#   CLERK_ISSUER                 Clerk Frontend API URL, e.g.
+#                                https://sound-pelican-42.clerk.accounts.dev
 #   EARTHENGINE_CREDENTIALS_JSON whole ~/.config/earthengine/credentials, one line
 #   GEE_PROJECT_ID               your Earth Engine cloud project
 #   CORS_ORIGINS                 the Vercel URL, e.g. https://loopsatellite.vercel.app
@@ -43,17 +45,35 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
-      # Sessions. Left OFF: Managed Better Auth is not enabled on the Neon branch,
-      # and AUTH_REQUIRED=true with no NEON_AUTH_URL makes the app refuse to boot
-      # by design. The API therefore runs open and says so at /api/health, and the
-      # front door offers "Continue as demo" — which is how a judge gets in.
+      # Sessions, via Clerk. There is no "Continue as demo" any more: Clerk offers
+      # sign-up, so a visitor with no account can make one, and the demo header
+      # that used to read the whole API without one is gone.
       #
-      # To turn sign-in on later: enable Auth on the branch, set NEON_AUTH_URL
-      # here and VITE_NEON_AUTH_URL on Vercel, then flip AUTH_REQUIRED to "true".
-      - key: NEON_AUTH_URL
+      # CLERK_ISSUER is the Frontend API URL from the Clerk dashboard. It is the
+      # `iss` of every token and the root of the JWKS this API verifies against.
+      # Set VITE_CLERK_PUBLISHABLE_KEY on Vercel to match.
+      - key: CLERK_ISSUER
         sync: false
+      # Clerk stamps the origin a token was minted for into `azp`. Setting this to
+      # the Vercel URL refuses a token lifted from this instance and replayed from
+      # somebody else's page. Comma-separated; blank disables the check.
+      - key: CLERK_AUTHORIZED_PARTIES
+        sync: false
+      # Flip to "true" once CLERK_ISSUER is set. The app then refuses to boot
+      # unconfigured rather than quietly serving everything to everyone — which
+      # is what a deployment should do, and why it is off until the key is in.
       - key: AUTH_REQUIRED
         value: "false"
+
+      # Earth Engine spend. POST /api/areas starts a real satellite pull billed to
+      # a personal OAuth token, and any signed-in user may call it — so it is
+      # capped over a rolling 24 hours, per person and per deployment. Counted in
+      # Postgres, not in memory: this service sleeps on the free tier and may run
+      # more than one worker. 0 disables a cap.
+      - key: AREA_QUOTA_PER_USER_PER_DAY
+        value: "3"
+      - key: AREA_QUOTA_PER_DAY
+        value: "20"
 
 # NOTE on the slow path: `POST /api/areas` runs its job inside this web service
 # via FastAPI BackgroundTasks. Render's free tier sleeps on inactivity and would

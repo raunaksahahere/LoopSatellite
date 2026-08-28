@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
+import { AppClerkProvider } from './components/auth/ClerkProvider'
 import './styles/global.css'
 import './styles/landing.css'
 
@@ -12,7 +13,11 @@ if (!container) throw new Error('#root is missing from index.html')
 createRoot(container).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      {/* Inside the router on purpose: the provider routes Clerk's own
+          navigation through react-router instead of a full page load. */}
+      <AppClerkProvider>
+        <App />
+      </AppClerkProvider>
     </BrowserRouter>
   </StrictMode>,
 )
