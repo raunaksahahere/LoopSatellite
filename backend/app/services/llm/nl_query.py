@@ -307,8 +307,21 @@ def query(question: str) -> dict[str, Any]:
             resolved=False,
         )
 
-    assumed_radius = radius_km is None
-    radius_km = float(radius_km or DEFAULT_RADIUS_KM)
+    # "Was the distance the officer's, or ours?" — asked of the question text, not
+    # of the merged filter. The model volunteers a plausible radius for a question
+    # that names none ("what's happening around Canning" comes back with 5 km), and
+    # reporting that as the officer's own number puts an invented distance on the
+    # map with nothing marking it as invented. The pattern parser is the honest
+    # witness here: it only ever reports a distance the sentence actually contains.
+    stated_radius = _parse_radius(question)
+    assumed_radius = stated_radius is None
+    # Only a distance the sentence actually contains gets drawn. The model
+    # volunteers one inconsistently for a question that names none — "what's
+    # happening around Canning" came back with 5 km on one run and nothing on the
+    # next — and a circle that changes size between identical questions is a bug
+    # on a map, however plausible each size is. No distance stated, one radius:
+    # DEFAULT_RADIUS_KM, reported as an assumption.
+    radius_km = float(stated_radius if stated_radius is not None else DEFAULT_RADIUS_KM)
 
     results = stl_esd.find_near(place.lat, place.lon, radius_km, **attribute_filters)
     ponds_in_range = stl_esd.ponds_near(place.lat, place.lon, radius_km)

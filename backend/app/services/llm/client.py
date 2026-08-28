@@ -4,15 +4,25 @@ Every LLM feature imports from here. No feature constructs its own API call, so
 there is exactly one place where the model, the key, the headers and the
 timeouts are decided.
 
-Thin wrapper around the OpenAI SDK pointed at OpenRouter. The model name is never
-hardcoded — it comes from OPENROUTER_MODEL.
+Thin wrapper around the OpenAI SDK pointed at **Google AI Studio's
+OpenAI-compatible endpoint**. The model name is never hardcoded — it comes from
+GEMINI_MODEL.
+
+Why the OpenAI SDK and not google-genai: the four features use only `model`,
+`messages`, `temperature`, `max_tokens` and `response_format` — no tools, no
+streaming — and all of it is supported through the compatibility layer. Probed
+before the migration: `response_format={"type": "json_object"}` returns bare JSON,
+while the same call without it returns a ```json fence. The parameter is honored,
+not silently ignored.
 
 Three things make this survive a demo
 -------------------------------------
-**A model chain.** `settings.model_chain` is the primary followed by
-OPENROUTER_MODEL_FALLBACKS. A 429, an overloaded provider or a delisted slug moves
-to the next model before anything fails. Free slugs are rate limited and get
-delisted without notice; a paid one can still be busy.
+**Retry with backoff.** The free tier is a single provider, so there is no chain
+to fall down: a 429 means "wait", not "try someone else". Requests are retried
+`LLM_MAX_RETRIES` times with exponential backoff, honouring `Retry-After` when the
+API sends one — all of it inside a wall-clock budget (`LLM_TOTAL_BUDGET`), with an
+explicit per-request timeout (`LLM_REQUEST_TIMEOUT`) so a stalled socket cannot
+hold a web request open. On exhaustion the caller gets LLMUnavailable and degrades.
 
 **A write-through cache**, keyed on a hash of (model, messages), stored as JSON
 under `precomputed/llm/`. This is the golden rule applied to the language model:
@@ -44,6 +54,7 @@ import hashlib
 import json
 import logging
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -51,12 +62,11 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TIMEOUT = 60.0
 DEFAULT_MAX_TOKENS = 1200
 
 
 class LLMNotConfigured(RuntimeError):
-    """OPENROUTER_API_KEY / OPENROUTER_MODEL are not both set."""
+    """GEMINI_API_KEY / GEMINI_MODEL are not both set."""
 
 
 class LLMError(RuntimeError):
@@ -64,7 +74,7 @@ class LLMError(RuntimeError):
 
 
 class LLMUnavailable(LLMError):
-    """Cache miss and every model in the chain is exhausted.
+    """Cache miss, and the provider is still rate limited after every retry.
 
     Subclasses LLMError on purpose: every caller already catches LLMError and
     degrades to its deterministic path, so exhaustion needs no new handling
@@ -72,23 +82,34 @@ class LLMUnavailable(LLMError):
     """
 
 
-#: Substrings meaning "try the next model", not "give up". Matched against the
-#: provider's error text because the OpenAI SDK surfaces OpenRouter's routing
-#: errors as generic exceptions rather than typed ones.
+#: Substrings meaning "wait and try again", not "give up". Matched against the
+#: error text because the OpenAI SDK surfaces Google's errors as generic
+#: exceptions rather than typed ones.
+#:
+#: Deliberately excludes model-not-found. Under OpenRouter a dead slug meant
+#: "try the next one"; here there is no next one, and a 404 on the model is a
+#: configuration mistake that should surface immediately rather than after
+#: three sleeps. `gemini-2.0-flash-lite` 404s exactly this way today.
 _RETRYABLE = (
     "429",
     "rate limit",
     "rate-limit",
     "quota",
+    "resource_exhausted",
     "temporarily",
-    "no endpoints found",
-    "not a valid model",
-    "no such model",
-    "model_not_found",
-    "is not available",
+    "unavailable",
     "503",
     "502",
+    "500",
     "overloaded",
+    "deadline",
+    # Both spellings: httpx says "Request timed out.", Google says "timeout".
+    # Matching only the latter made a hung socket look like a config bug and
+    # skip the retry entirely.
+    "timeout",
+    "timed out",
+    "connection error",
+    "apiconnectionerror",
 )
 
 
@@ -113,44 +134,44 @@ def is_available() -> bool:
     return is_configured() or cache_stats()["entries"] > 0
 
 
-def _headers() -> dict[str, str]:
-    headers = {"X-Title": settings.openrouter_app_name}
-    if settings.openrouter_site_url:
-        headers["HTTP-Referer"] = settings.openrouter_site_url
-    return headers
-
-
 _client = None
 
 
 def get_client():
-    """Lazily construct the OpenAI-compatible client aimed at OpenRouter."""
+    """Lazily construct the OpenAI-compatible client aimed at Google AI Studio.
+
+    No HTTP-Referer / X-Title headers: those were OpenRouter attribution and mean
+    nothing to Google.
+    """
     global _client
     if not is_configured():
         raise LLMNotConfigured(
-            "Set OPENROUTER_API_KEY and OPENROUTER_MODEL in .env to enable LLM features."
+            "Set GEMINI_API_KEY in .env to enable LLM features."
         )
     if _client is None:
         from openai import OpenAI  # imported lazily so the API boots without the SDK
 
         _client = OpenAI(
-            api_key=settings.openrouter_api_key,
-            base_url=settings.openrouter_base_url,
-            default_headers=_headers(),
-            timeout=DEFAULT_TIMEOUT,
+            api_key=settings.gemini_api_key,
+            base_url=settings.gemini_base_url,
+            # Explicit, not the SDK default: a free-tier endpoint under load can
+            # stall rather than refuse, and an unbounded socket read would hold a
+            # web request open behind it. Also passed per-call in
+            # `_call_with_retry`, so a shrinking budget can tighten it.
+            timeout=settings.llm_request_timeout,
+            max_retries=0,  # retries are ours; the SDK's would hide them from the budget
         )
     return _client
 
 
-def _with_online(name: str, online: bool) -> str:
-    if online and not name.endswith(":online"):
-        return f"{name}:online"
-    return name
+def model_name() -> str:
+    """The configured model.
 
-
-def model_name(*, online: bool = False) -> str:
-    """The configured primary model, optionally as its `:online` variant."""
-    return _with_online(settings.openrouter_model or "", online)
+    There is no `:online` variant here. That was an OpenRouter construct that made
+    a model do its own web search; Google has no equivalent, so evidence
+    corroboration fetches results server-side and passes them as context.
+    """
+    return settings.gemini_model or ""
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +213,7 @@ def cache_read_any(messages: list[dict[str, str]]) -> str | None:
     Two situations need this, and both are ordinary rather than exotic:
 
       * The image ships `precomputed/llm/` but the container has no
-        OPENROUTER_MODEL, so there is no model name to build a key from. Without
+        GEMINI_MODEL, so there is no model name to build a key from. Without
         this, a warm cache is unreadable exactly where it was meant to be used.
       * The cache was warmed with one model and the deployment is configured for
         another. The answer is still a good answer; refusing it would mean a live
@@ -254,102 +275,141 @@ def complete(
     *,
     temperature: float = 0.2,
     max_tokens: int = DEFAULT_MAX_TOKENS,
-    online: bool = False,
     response_format: dict[str, Any] | None = None,
     allow_network: bool = True,
 ) -> str:
     """One completion, returned as text.
 
-    Reads the cache first for every model in the chain, so a cached answer from a
-    fallback still counts as a hit. Then tries each model in turn, moving on for a
-    rate limit or a delisted slug, and failing hard on anything else — a malformed
-    request is a bug and should not be retried against four models.
+    Reads the cache first — including `cache_read_any`, which matches on messages
+    alone, so entries warmed under a previous provider still answer. Then calls
+    the model, retrying a rate limit with backoff and failing fast on anything
+    else: a malformed request or a wrong model name is a bug, and sleeping three
+    times before reporting it helps nobody.
 
-    Raises LLMUnavailable when nothing is left to try. Callers degrade; they do
-    not turn it into a 500.
+    Raises LLMUnavailable when the provider is still rate limited after every
+    retry. Callers degrade; they do not turn it into a 500.
     """
-    resolved = [_with_online(model, online) for model in settings.model_chain]
+    model = settings.gemini_model
 
-    for model in resolved:
+    if model:
         cached = cache_read(model, messages)
         if cached is not None:
             logger.debug("LLM cache hit (%s)", model)
             return cached
 
-    # Nothing under the configured chain — but the warmed answer may be filed
-    # under a model this deployment does not name. See cache_read_any.
+    # Nothing under the configured model — but the warmed answer may be filed
+    # under one this deployment does not name, including a previous provider's.
+    # See cache_read_any; this is why migrating providers costs no re-warm.
     cached = cache_read_any(messages)
     if cached is not None:
         return cached
 
-    if not resolved:
-        # LLMUnavailable, not LLMNotConfigured: every caller already degrades on
-        # LLMError, of which this is one.
-        raise LLMUnavailable(
-            "OPENROUTER_MODEL is not set and nothing matching is in the warm cache."
-        )
-
     if not allow_network:
         raise LLMUnavailable("cache miss, and this call was told not to use the network")
-    if not is_configured():
-        raise LLMNotConfigured(
-            "Set OPENROUTER_API_KEY and OPENROUTER_MODEL in .env to enable LLM features."
+    if not model:
+        raise LLMUnavailable(
+            "GEMINI_MODEL is not set and nothing matching is in the warm cache."
         )
+    if not is_configured():
+        raise LLMNotConfigured("Set GEMINI_API_KEY in .env to enable LLM features.")
 
-    text, answered_by = _call_chain(
+    text = _call_with_retry(
         messages,
-        resolved,
+        model,
         temperature=temperature,
         max_tokens=max_tokens,
         response_format=response_format,
     )
     # Write through: this request already paid for the answer, so an identical
     # one must not pay again.
-    _cache_write_quietly(answered_by, messages, text)
+    _cache_write_quietly(model, messages, text)
     return text
 
 
-def _call_chain(
+def _retry_after_seconds(exc: Exception, attempt: int) -> float:
+    """How long to wait. Google's Retry-After if it sent one, else exponential."""
+    header_value = None
+    response = getattr(exc, "response", None)
+    if response is not None:
+        try:
+            header_value = response.headers.get("retry-after")
+        except Exception:  # noqa: BLE001 - a header lookup must never mask the 429
+            header_value = None
+    if header_value:
+        try:
+            return min(float(header_value), 60.0)
+        except (TypeError, ValueError):
+            pass
+    return settings.llm_retry_base_delay * (2**attempt)
+
+
+def _call_with_retry(
     messages: list[dict[str, str]],
-    resolved: list[str],
+    model: str,
     *,
     temperature: float,
     max_tokens: int,
     response_format: dict[str, Any] | None,
-) -> tuple[str, str]:
-    """Try each model in turn. Returns (text, the model that answered).
+) -> str:
+    """Call the model, retrying a rate limit with exponential backoff.
 
-    Which model answered is part of the cache key, so it has to come back out —
-    a fallback's answer filed under the primary's name would never be read again.
+    One provider, so there is nothing to fall over to — waiting is the only
+    correct response to a 429, and the free tier's limits are per-minute.
     """
     client = get_client()
-    failures: list[str] = []
+    kwargs: dict[str, Any] = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if response_format:
+        kwargs["response_format"] = response_format
 
-    for model in resolved:
-        kwargs: dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
-        if response_format:
-            kwargs["response_format"] = response_format
+    deadline = time.monotonic() + settings.llm_total_budget
+    last: str = ""
+    for attempt in range(settings.llm_max_retries + 1):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            last = last or "budget exhausted before the first attempt"
+            break
         try:
-            completion = client.chat.completions.create(**kwargs)
+            # Never let one attempt outlive the budget: a 30s socket timeout with
+            # 4s of budget left would blow through it.
+            completion = client.chat.completions.create(
+                **kwargs, timeout=min(settings.llm_request_timeout, remaining)
+            )
         except Exception as exc:
-            failures.append(f"{model}: {exc}")
-            if _is_retryable(exc):
-                logger.info("model %s unavailable, trying the next: %s", model, exc)
-                continue
-            logger.warning("LLM call failed on %s: %s", model, exc)
-            raise LLMError(str(exc)) from exc
+            last = f"{type(exc).__name__}: {exc}"
+            if not _is_retryable(exc):
+                # A 400 or a 404 on the model is a configuration bug. Surface it
+                # now rather than after three sleeps.
+                logger.warning("LLM call failed on %s: %s", model, exc)
+                raise LLMError(str(exc)) from exc
+            if attempt == settings.llm_max_retries:
+                break
+            delay = _retry_after_seconds(exc, attempt)
+            # Sleeping past the deadline only to fail is time the caller could
+            # have spent rendering its deterministic answer.
+            if time.monotonic() + delay >= deadline:
+                last = f"{last} (gave up: {delay:.0f}s wait exceeds the remaining budget)"
+                break
+            logger.info(
+                "rate limited on %s, retrying in %.1fs (attempt %d/%d)",
+                model, delay, attempt + 1, settings.llm_max_retries,
+            )
+            time.sleep(delay)
+            continue
 
         if not completion.choices:
-            failures.append(f"{model}: provider returned no choices")
-            continue
-        return (completion.choices[0].message.content or "").strip(), model
+            last = "provider returned no choices"
+            break
+        return (completion.choices[0].message.content or "").strip()
 
-    raise LLMUnavailable("every model in the chain failed — " + "; ".join(failures))
+    raise LLMUnavailable(
+        f"{model} still unavailable after {settings.llm_max_retries} retries "
+        f"within {settings.llm_total_budget:.0f}s — {last}"
+    )
 
 
 def warm(
@@ -357,7 +417,6 @@ def warm(
     *,
     temperature: float = 0.2,
     max_tokens: int = DEFAULT_MAX_TOKENS,
-    online: bool = False,
     response_format: dict[str, Any] | None = None,
 ) -> str:
     """Populate the cache for these exact messages. Returns "hit" | "warmed".
@@ -365,14 +424,14 @@ def warm(
     Skips anything already cached, so re-running after adding one pond costs one
     pond's worth of requests rather than the whole bundle's.
     """
-    resolved = [_with_online(model, online) for model in settings.model_chain]
-    if any(cache_read(model, messages) is not None for model in resolved):
+    if cache_read(settings.gemini_model, messages) is not None or (
+        cache_read_any(messages) is not None
+    ):
         return "hit"
     complete(
         messages,
         temperature=temperature,
         max_tokens=max_tokens,
-        online=online,
         response_format=response_format,
     )
     return "warmed"
@@ -383,7 +442,6 @@ def complete_json(
     *,
     temperature: float = 0.0,
     max_tokens: int = DEFAULT_MAX_TOKENS,
-    online: bool = False,
     allow_network: bool = True,
 ) -> Any:
     """Completion parsed as JSON.
@@ -395,7 +453,6 @@ def complete_json(
         messages,
         temperature=temperature,
         max_tokens=max_tokens,
-        online=online,
         response_format={"type": "json_object"},
         allow_network=allow_network,
     )
@@ -434,12 +491,12 @@ def status() -> dict[str, Any]:
     """Surfaced at /api/health so the UI can grey out LLM panels honestly."""
     return {
         "configured": is_configured(),
-        "model": settings.openrouter_model,
-        "model_chain": settings.model_chain,
+        "model": settings.gemini_model,
+        "provider": "google-ai-studio",
         "cache": cache_stats(),
-        "base_url": settings.openrouter_base_url,
+        "base_url": settings.gemini_base_url,
         "search_provider": settings.search_provider,
-        "search_configured": settings.search_provider == "openrouter_online"
-        and is_configured()
-        or bool(settings.search_api_key),
+        # No provider-side search here, so this is purely "is a search key set".
+        "search_configured": settings.search_provider in ("tavily", "serper")
+        and bool(settings.search_api_key),
     }

@@ -1,12 +1,15 @@
 """Swappable web-search backend for evidence corroboration.
 
-Three ways to get results, chosen by SEARCH_PROVIDER:
+Two ways to get results, chosen by SEARCH_PROVIDER:
 
-  openrouter_online  Let the model's `:online` variant do the retrieval. Returns
-                     no pre-fetched results — `web_search` reports `online=True`
-                     and the caller passes that through to the completion.
   tavily / serper    Fetch results here and hand them to the model as context.
   none               Refuse; the caller reports honestly that no search ran.
+
+There used to be a third, `openrouter_online`, which let the model's `:online`
+variant do its own retrieval. Google AI Studio has no equivalent, so it was
+removed with the provider rather than left to fail at request time. Fetching
+here is arguably better anyway: the results are visible in the logs and the same
+for every model.
 
 Keeping this behind one function means swapping providers touches this file only.
 """
@@ -30,20 +33,14 @@ class SearchUnavailable(RuntimeError):
     """No usable search provider is configured, or the provider failed."""
 
 
-def web_search(query: str) -> tuple[list[dict[str, Any]], bool]:
-    """Return (results, use_online_model).
-
-    When `use_online_model` is True the results list is empty by design — the
-    retrieval happens inside the model call instead of here.
-    """
+def web_search(query: str) -> list[dict[str, Any]]:
+    """Fetch search results for the model to read. Raises SearchUnavailable."""
     provider = (settings.search_provider or "none").lower()
 
-    if provider == "openrouter_online":
-        return [], True
     if provider == "tavily":
-        return _tavily(query), False
+        return _tavily(query)
     if provider == "serper":
-        return _serper(query), False
+        return _serper(query)
     raise SearchUnavailable(f"SEARCH_PROVIDER={provider!r}")
 
 

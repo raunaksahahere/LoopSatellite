@@ -131,9 +131,16 @@ def suggestions(query: str, n: int = 5) -> list[str]:
     if not cache:
         return []
     close = difflib.get_close_matches(query.strip().lower(), list(cache), n=n, cutoff=0.4)
-    if close:
-        return [cache[c].name for c in close]
-    return names()[:n]
+    out = [cache[c].name for c in close]
+    # Top up with real names. One weak fuzzy hit is worse than no hint at all:
+    # "Chittagong" scrapes past the cutoff against "Canning", and offering that
+    # alone reads as "did you mean Canning?" rather than "here is what we cover".
+    for name in names():
+        if len(out) >= n:
+            break
+        if name not in out:
+            out.append(name)
+    return out
 
 
 # ---------------------------------------------------------------------------

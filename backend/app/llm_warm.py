@@ -181,9 +181,9 @@ def main() -> None:
     )
     if counts["failed"]:
         print(
-            "\nSome entries failed. Check OPENROUTER_MODEL is a chat model (not an "
-            "embedding one) and that OPENROUTER_MODEL_FALLBACKS gives it somewhere to "
-            "fall back to."
+            "\nSome entries failed. Check GEMINI_API_KEY is set and GEMINI_MODEL "
+            "names a current model — a retired one 404s immediately rather than "
+            "being retried."
         )
 
 

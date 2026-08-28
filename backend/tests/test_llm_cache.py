@@ -1,4 +1,4 @@
-"""The LLM response cache, the model chain, and the warm path.
+"""The LLM response cache, the retry policy, and the warm path.
 
 The golden rule applied to the language model: a demo should make zero API calls.
 Everything here runs with the provider stubbed out — a test that called OpenRouter
@@ -27,9 +27,11 @@ def cache(tmp_path, monkeypatch):
     settings = config.get_settings()
     monkeypatch.setattr(type(settings), "llm_cache_dir", property(lambda _: tmp_path))
     monkeypatch.setattr(settings, "llm_cache_enabled", True)
-    monkeypatch.setattr(settings, "openrouter_api_key", "test-key")
-    monkeypatch.setattr(settings, "openrouter_model", "test/primary")
-    monkeypatch.setattr(settings, "openrouter_model_fallbacks", "test/backup")
+    monkeypatch.setattr(settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(settings, "gemini_model", "test/primary")
+    # No sleeping in tests. The backoff itself is asserted separately.
+    monkeypatch.setattr(settings, "llm_retry_base_delay", 0.0)
+    monkeypatch.setattr(settings, "llm_max_retries", 2)
     return tmp_path
 
 
@@ -138,83 +140,130 @@ def test_caching_can_be_switched_off(cache, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Model chain
+# Retry policy — one provider, so a 429 means wait, not "try someone else"
 # ---------------------------------------------------------------------------
-def test_a_rate_limit_falls_through_to_the_next_model(cache, monkeypatch):
+def test_a_rate_limit_is_retried_and_then_succeeds(cache, monkeypatch):
+    calls = {"n": 0}
+
     def behaviour(model):
-        if model == "test/primary":
-            return RuntimeError("Error code: 429 - rate limit exceeded")
-        return "answered by the backup"
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return RuntimeError("Error code: 429 - RESOURCE_EXHAUSTED: rate limit")
+        return "answered on the retry"
 
     provider = install(monkeypatch, behaviour)
-    assert client.complete(MESSAGES) == "answered by the backup"
-    assert provider.calls == ["test/primary", "test/backup"]
+    assert client.complete(MESSAGES) == "answered on the retry"
+    assert len(provider.calls) == 2
 
 
-def test_a_fallbacks_answer_is_cached_under_the_model_that_gave_it(cache, monkeypatch):
-    """A fallback's answer filed under the primary's name would never be read again."""
-
-    def behaviour(model):
-        if model == "test/primary":
-            return RuntimeError("429 rate limit")
-        return "backup answer"
-
-    install(monkeypatch, behaviour)
-    client.complete(MESSAGES)
-    assert client.cache_read("test/backup", MESSAGES) == "backup answer"
-    assert client.cache_read("test/primary", MESSAGES) is None
-
-
-def test_a_cached_fallback_answer_still_counts_as_a_hit(cache, monkeypatch):
-    def behaviour(model):
-        if model == "test/primary":
-            return RuntimeError("429 rate limit")
-        return "backup answer"
-
-    provider = install(monkeypatch, behaviour)
-    client.complete(MESSAGES)
-    before = len(provider.calls)
-    assert client.complete(MESSAGES) == "backup answer"
-    assert len(provider.calls) == before
+def test_a_persistent_rate_limit_raises_llm_unavailable(cache, monkeypatch):
+    provider = install(monkeypatch, lambda m: RuntimeError("429 rate limit"))
+    with pytest.raises(client.LLMUnavailable):
+        client.complete(MESSAGES)
+    # 1 initial attempt + llm_max_retries
+    assert len(provider.calls) == 3
 
 
 def test_a_malformed_request_fails_immediately(cache, monkeypatch):
-    """A 400 is a bug in our prompt. Retrying it against every model wastes time
-    and money and still fails — this is exactly what an embedding model in
-    OPENROUTER_MODEL produced."""
+    """A 400 is a bug in our prompt. Sleeping three times before reporting it
+    helps nobody."""
+    provider = install(
+        monkeypatch,
+        lambda m: RuntimeError("Error code: 400 - INVALID_ARGUMENT: bad request"),
+    )
+    with pytest.raises(client.LLMError):
+        client.complete(MESSAGES)
+    assert len(provider.calls) == 1, "a 400 must not be retried"
+
+
+def test_a_retired_model_fails_immediately(cache, monkeypatch):
+    """Under OpenRouter a dead slug meant 'try the next one'. There is no next
+    one here, so a 404 on the model is a config mistake to surface at once —
+    this is exactly what gemini-2.0-flash-lite does today."""
     provider = install(
         monkeypatch,
         lambda m: RuntimeError(
-            "Error code: 400 - is an embedding model and cannot be used with "
-            "the chat/completions endpoint"
+            "Error code: 404 - This model models/gemini-2.0-flash-lite is no longer available."
         ),
     )
     with pytest.raises(client.LLMError):
         client.complete(MESSAGES)
-    assert provider.calls == ["test/primary"], "a 400 must not be retried down the chain"
+    assert len(provider.calls) == 1
 
 
-def test_exhausting_the_chain_raises_llm_unavailable(cache, monkeypatch):
-    install(monkeypatch, lambda m: RuntimeError("503 overloaded"))
+def test_backoff_grows_and_honours_retry_after(monkeypatch):
+    settings = config.get_settings()
+    monkeypatch.setattr(settings, "llm_retry_base_delay", 1.0)
+
+    plain = RuntimeError("429")
+    assert client._retry_after_seconds(plain, 0) == 1.0
+    assert client._retry_after_seconds(plain, 1) == 2.0
+    assert client._retry_after_seconds(plain, 2) == 4.0
+
+    class _WithHeader(RuntimeError):
+        response = type("R", (), {"headers": {"retry-after": "7"}})()
+
+    assert client._retry_after_seconds(_WithHeader("429"), 0) == 7.0
+
+
+def test_a_timeout_is_retried_not_treated_as_a_config_bug(cache, monkeypatch):
+    """httpx spells it "Request timed out." — no substring "timeout" in sight.
+
+    Matching only the latter classified a hung socket as non-retryable, so a
+    stalled free-tier endpoint failed on the first attempt instead of backing off.
+    """
+    provider = install(monkeypatch, lambda m: RuntimeError("Request timed out."))
     with pytest.raises(client.LLMUnavailable):
         client.complete(MESSAGES)
+    assert len(provider.calls) == 3
+
+
+def test_the_total_budget_stops_retrying_before_the_deadline(cache, monkeypatch):
+    """Three retries each waiting a `Retry-After: 60` is minutes of a held web
+    request. The budget gives up early so the caller can render its
+    deterministic answer instead."""
+    settings = config.get_settings()
+    monkeypatch.setattr(settings, "llm_total_budget", 0.5)
+    monkeypatch.setattr(settings, "llm_retry_base_delay", 30.0)
+
+    slept: list[float] = []
+    monkeypatch.setattr(client.time, "sleep", slept.append)
+
+    provider = install(monkeypatch, lambda m: RuntimeError("429 rate limit"))
+    with pytest.raises(client.LLMUnavailable):
+        client.complete(MESSAGES)
+    assert slept == [], "a 30s wait must not be taken inside a 0.5s budget"
+    assert len(provider.calls) == 1
+
+
+def test_each_attempt_is_capped_by_the_remaining_budget(cache, monkeypatch):
+    """A 30s socket timeout with 4s of budget left would blow through it, so the
+    per-request timeout is min(configured, remaining)."""
+    settings = config.get_settings()
+    monkeypatch.setattr(settings, "llm_request_timeout", 30.0)
+    monkeypatch.setattr(settings, "llm_total_budget", 2.0)
+
+    seen: list[float] = []
+
+    def behaviour(model):
+        return "fine"
+
+    provider = install(monkeypatch, behaviour)
+    original = provider.create
+
+    def spy(**kwargs):
+        seen.append(kwargs["timeout"])
+        return original(**kwargs)
+
+    monkeypatch.setattr(provider, "create", spy)
+    client.complete(MESSAGES)
+    assert seen and seen[0] <= 2.0
 
 
 def test_llm_unavailable_is_an_llm_error(cache):
     """Every feature already catches LLMError and degrades. Exhaustion must land
     in those handlers without any of them being changed."""
     assert issubclass(client.LLMUnavailable, client.LLMError)
-
-
-def test_the_chain_deduplicates_and_keeps_order():
-    settings = config.get_settings()
-    original = (settings.openrouter_model, settings.openrouter_model_fallbacks)
-    try:
-        settings.openrouter_model = "a"
-        settings.openrouter_model_fallbacks = "b, a , c,"
-        assert settings.model_chain == ["a", "b", "c"]
-    finally:
-        settings.openrouter_model, settings.openrouter_model_fallbacks = original
 
 
 # ---------------------------------------------------------------------------
@@ -264,14 +313,13 @@ def test_warm_all_reports_rather_than_raising_when_unconfigured(monkeypatch):
 # ---------------------------------------------------------------------------
 def test_a_warmed_answer_is_found_with_no_model_configured(cache, monkeypatch):
     """The deployment this was built for: the image ships precomputed/llm/, the
-    container has no OPENROUTER_MODEL, and the answer must still come back."""
+    container has no GEMINI_MODEL, and the answer must still come back."""
     install(monkeypatch, lambda m: "warmed by the primary")
     client.complete(MESSAGES)
 
     settings = config.get_settings()
-    monkeypatch.setattr(settings, "openrouter_model", None)
-    monkeypatch.setattr(settings, "openrouter_model_fallbacks", "")
-    monkeypatch.setattr(settings, "openrouter_api_key", None)
+    monkeypatch.setattr(settings, "gemini_model", "")
+    monkeypatch.setattr(settings, "gemini_api_key", None)
 
     assert client.is_available(), "a warm cache alone should count as available"
     assert client.complete(MESSAGES) == "warmed by the primary"
@@ -282,8 +330,7 @@ def test_a_warmed_answer_is_found_under_a_different_model(cache, monkeypatch):
     install(monkeypatch, lambda m: "warmed by the old model")
     client.complete(MESSAGES)
 
-    monkeypatch.setattr(config.get_settings(), "openrouter_model", "test/some-other-model")
-    monkeypatch.setattr(config.get_settings(), "openrouter_model_fallbacks", "")
+    monkeypatch.setattr(config.get_settings(), "gemini_model", "test/some-other-model")
 
     def explode():
         raise AssertionError("should have been served from the cache")
@@ -294,12 +341,11 @@ def test_a_warmed_answer_is_found_under_a_different_model(cache, monkeypatch):
 
 def test_nothing_configured_and_nothing_cached_degrades(cache, monkeypatch):
     settings = config.get_settings()
-    monkeypatch.setattr(settings, "openrouter_model", None)
-    monkeypatch.setattr(settings, "openrouter_model_fallbacks", "")
+    monkeypatch.setattr(settings, "gemini_model", "")
     with pytest.raises(client.LLMUnavailable):
         client.complete(MESSAGES)
 
 
 def test_is_available_is_false_with_no_key_and_an_empty_cache(cache, monkeypatch):
-    monkeypatch.setattr(config.get_settings(), "openrouter_api_key", None)
+    monkeypatch.setattr(config.get_settings(), "gemini_api_key", None)
     assert not client.is_available()

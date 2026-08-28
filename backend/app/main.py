@@ -169,6 +169,6 @@ def _log_startup() -> None:
     logger.info(
         "llm configured=%s model=%s | verifications=%s",
         client.is_configured(),
-        settings.openrouter_model,
+        settings.gemini_model,
         verifications.backend(),
     )

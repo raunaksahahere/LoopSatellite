@@ -250,7 +250,7 @@ Three properties are load-bearing:
   by whatever gets asked on stage.
 - **A shipped cache needs no configuration to be read.** `cache_read_any` matches
   on messages alone, so a container with `precomputed/llm/` and no
-  `OPENROUTER_MODEL` still serves model-quality output. Without that the cache was
+  `GEMINI_MODEL` still serves model-quality output. Without that the cache was
   unreadable in exactly the deployment it was built for — the image has the cache,
   Render has the key, and a demo box may have neither.
 - **Features gate on `is_available()`, not `is_configured()`.** A warm cache alone
@@ -258,8 +258,13 @@ Three properties are load-bearing:
   search, and a cached answer about what the public record said last week would be
   worse than an honest "search is switched off".
 
-When the cache misses and every model in `settings.model_chain` is exhausted,
-callers get `LLMUnavailable` — a subclass of `LLMError`, so every existing
+The provider is Google AI Studio, reached through its OpenAI-compatible endpoint
+(`/v1beta/openai/`), so the OpenAI SDK code is unchanged. `response_format=
+{"type": "json_object"}` was probed and is honored there, which is what the query,
+report and evidence features depend on.
+
+When the cache misses and the provider is still rate limited after
+`LLM_MAX_RETRIES`, callers get `LLMUnavailable` — a subclass of `LLMError`, so every existing
 `except LLMError` already degrades correctly and nothing needed changing.
 
 ## Falling back to synthesis, and where it must not

@@ -76,6 +76,45 @@ def test_a_place_with_no_radius_gets_a_stated_default():
     assert result["assumed_radius"] is True
 
 
+def test_a_model_invented_radius_is_never_drawn(monkeypatch):
+    """Regression: the model volunteers a radius for a question that names none.
+
+    Live, "what's happening around Canning" came back with radius_km 5 on one run
+    and nothing on the next, and the response reported assumed_radius false — so
+    an invented distance was drawn on the map, at a size that changed between
+    identical questions, labelled as the officer's own number.
+
+    The pattern parser is the witness: it only reports a distance the sentence
+    actually contains.
+    """
+    monkeypatch.setattr(
+        nl_query.client,
+        "complete_json",
+        lambda *a, **k: {
+            "filter": {"place": "Canning", "radius_km": 5.0},
+            "interpretation": "",
+            "unparsed": [],
+        },
+    )
+    monkeypatch.setattr(nl_query.client, "is_available", lambda: True)
+    monkeypatch.setattr(nl_query.client, "is_configured", lambda: False)
+
+    result = nl_query.query("what's happening around Canning")
+    assert result["assumed_radius"] is True
+    assert result["radius_km"] == nl_query.DEFAULT_RADIUS_KM
+    # ...but a distance the officer did state is still honoured and not flagged.
+    result = nl_query.query("what's happening around Canning within 3 km")
+    assert result["radius_km"] == 3.0
+    assert result["assumed_radius"] is False
+
+
+def test_an_unknown_place_suggests_more_than_one_weak_match():
+    """Regression: "Chittagong" scrapes past the fuzzy cutoff against "Canning",
+    and offering that alone reads as "did you mean Canning?" rather than "here is
+    what we cover"."""
+    assert len(gazetteer.suggestions("Chittagong")) == 5
+
+
 def test_an_administrative_label_is_not_read_as_a_place():
     """Regression: 'ponds in Ward 108' once parsed 'Ward' as a settlement name."""
     parsed = nl_query.rule_parse("which ponds in Ward 108 lost more than 20% and never recovered")

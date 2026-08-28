@@ -2,8 +2,7 @@
 #
 # Secrets are NOT in this file. Set them in the Render dashboard:
 #   DATABASE_URL                 Neon connection string, pasted as Neon prints it
-#   OPENROUTER_API_KEY           OpenRouter key
-#   OPENROUTER_MODEL             e.g. anthropic/claude-sonnet-4.5
+#   GEMINI_API_KEY               Google AI Studio key (aistudio.google.com/apikey)
 #   EARTHENGINE_CREDENTIALS_JSON whole ~/.config/earthengine/credentials, one line
 #   GEE_PROJECT_ID               your Earth Engine cloud project
 #   CORS_ORIGINS                 the Vercel URL, e.g. https://loopsatellite.vercel.app
@@ -16,22 +15,27 @@ services:
     healthCheckPath: /api/health
     plan: free
     envVars:
-      - key: OPENROUTER_APP_NAME
-        value: LoopSatellite
+      # gemini-2.0-flash-lite is retired and 404s. Pinned rather than using
+      # gemini-flash-lite-latest: a model that floats changes the prose in a
+      # warmed cache underneath you.
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
       # tavily: real search results are fetched server-side and handed to the
       # model, rather than trusting an :online model to retrieve well. Needs
       # SEARCH_API_KEY. Set to "none" to switch evidence corroboration off.
+      # Bounds on one completion, so a stalled or rate-limited free tier degrades
+      # to the deterministic answer instead of holding a request open for minutes.
+      - key: LLM_REQUEST_TIMEOUT
+        value: "30"
+      - key: LLM_TOTAL_BUDGET
+        value: "75"
       - key: SEARCH_PROVIDER
         value: tavily
       - key: SEARCH_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: OPENROUTER_MODEL
-        sync: false
-      - key: OPENROUTER_SITE_URL
+      - key: GEMINI_API_KEY
         sync: false
       - key: EARTHENGINE_CREDENTIALS_JSON
         sync: false

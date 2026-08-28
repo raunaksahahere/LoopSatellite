@@ -141,9 +141,9 @@ and the whole-site report — took **93 seconds** once. Re-running takes **0.17
 seconds** and makes no requests. With the network physically severed, a radius
 question and a grounded notice both answer in about **2 milliseconds**.
 
-If the cache misses anyway, `OPENROUTER_MODEL_FALLBACKS` gives the primary model
-somewhere to fall back to on a 429 or an overloaded provider; if the whole chain
-is exhausted, every feature degrades to its deterministic path and says so. The
+If the cache misses anyway, a 429 is retried with exponential backoff (honouring
+Google's `Retry-After`); if the provider is still rate limited after
+`LLM_MAX_RETRIES`, every feature degrades to its deterministic path and says so. The
 notice still quotes the real Rules either way — that comes from retrieval, not
 from the model.
 
@@ -276,5 +276,6 @@ file that inherits it.
 
 PostgreSQL (Neon, geometries as GeoJSON in JSONB — no PostGIS) · FastAPI ·
 SQLAlchemy + Alembic · OpenRouter via the OpenAI SDK · React + Vite + TypeScript ·
-MapLibre GL · Recharts · ReportLab · Earth Engine (personal OAuth token) +
+MapLibre GL · Recharts · ReportLab · Google AI Studio (Gemini, via the OpenAI SDK) ·
+Earth Engine (personal OAuth token) +
 `geeup` + `statsmodels` + `pyproj` · Nominatim (build time only) · Render + Vercel.

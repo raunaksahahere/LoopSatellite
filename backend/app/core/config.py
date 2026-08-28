@@ -80,22 +80,35 @@ class Settings(BaseSettings):
     # Areas submitted at runtime do need one — see services/areas.py.
     database_url: str | None = None
 
-    # --- LLM (OpenRouter) ----------------------------------------------
-    openrouter_api_key: str | None = None
-    openrouter_model: str | None = None
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    openrouter_site_url: str | None = None
-    openrouter_app_name: str = "LoopSatellite"
-    # Comma-separated slugs tried in order after the primary. A 429 or a delisted
-    # model moves down the chain before anything fails — free-tier slugs are rate
-    # limited and get delisted without notice.
-    openrouter_model_fallbacks: str = ""
+    # --- LLM (Google AI Studio, via its OpenAI-compatible endpoint) -----
+    gemini_api_key: str | None = None
+    # gemini-2.0-flash-lite is retired; the API refuses it with a 404 naming this
+    # as the replacement. `gemini-flash-lite-latest` also exists but floats, and a
+    # model that changes under you changes the prose in a warmed cache too.
+    gemini_model: str = "gemini-3.5-flash-lite"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    # Google AI Studio's free tier is a single provider, so there is no chain to
+    # fall down. A 429 is a rate limit rather than a dead model, and waiting is
+    # the correct response. On exhaustion the caller gets LLMError and degrades.
+    llm_max_retries: int = 3
+    llm_retry_base_delay: float = 1.0
+    # Bounds on how long one `complete()` may take. Both matter because the free
+    # tier can hang rather than refuse: without an explicit per-request timeout
+    # the SDK's default lets a single stalled socket hold a web request open, and
+    # without a total budget three retries plus three `Retry-After: 60` sleeps
+    # add up to minutes. `complete()` gives up inside LLM_TOTAL_BUDGET seconds and
+    # the caller degrades to its deterministic path.
+    llm_request_timeout: float = 30.0
+    llm_total_budget: float = 75.0
     # Write-through response cache under precomputed/llm/. Switch off to force
     # every call to hit the provider (useful when checking a prompt change).
     llm_cache_enabled: bool = True
 
     # --- Web search (evidence corroboration) ----------------------------
-    search_provider: str = "openrouter_online"  # openrouter_online | tavily | serper | none
+    # tavily | serper | none. There is no provider-side web search here: Gemini
+    # has no equivalent of OpenRouter's `:online` model variant, so results are
+    # fetched server-side and handed to the model as context.
+    search_provider: str = "tavily"
     search_api_key: str | None = None
 
     # --- Sessions (Neon Managed Better Auth) ----------------------------
@@ -135,22 +148,12 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
-    def model_chain(self) -> list[str]:
-        """Primary model first, then the fallbacks, de-duplicated."""
-        chain: list[str] = []
-        for name in [self.openrouter_model, *self.openrouter_model_fallbacks.split(",")]:
-            slug = (name or "").strip()
-            if slug and slug not in chain:
-                chain.append(slug)
-        return chain
-
-    @property
     def llm_cache_dir(self) -> Path:
         return self.precomputed_dir / "llm"
 
     @property
     def llm_configured(self) -> bool:
-        return bool(self.openrouter_api_key and self.openrouter_model)
+        return bool(self.gemini_api_key and self.gemini_model)
 
     @property
     def db_configured(self) -> bool:

@@ -43,9 +43,8 @@ def isolate_from_live_llm() -> None:
     settings = config.get_settings()
     if os.environ.get("TEST_ALLOW_LIVE_LLM"):
         return
-    settings.openrouter_api_key = None
-    settings.openrouter_model = None
-    settings.openrouter_model_fallbacks = ""
+    settings.gemini_api_key = None
+    settings.gemini_model = ""
     # Not just the key: a warm cache would make is_available() true and serve
     # model prose to tests that exist to check the fallback.
     settings.llm_cache_enabled = False

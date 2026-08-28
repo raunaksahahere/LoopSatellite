@@ -75,13 +75,13 @@ def corroborate(anomaly: dict[str, Any], extra_terms: list[str] | None = None) -
             "searched": False,
             "note": (
                 "Evidence search is switched off because no language model is configured. "
-                "Set OPENROUTER_API_KEY and OPENROUTER_MODEL to enable it. "
+                "Set GEMINI_API_KEY to enable it. "
                 "The water-loss finding itself does not depend on this step."
             ),
         }
 
     try:
-        results, used_online = web_search(query)
+        results = web_search(query)
     except SearchUnavailable as exc:
         return {
             "anomaly_id": anomaly["id"],
@@ -100,7 +100,6 @@ def corroborate(anomaly: dict[str, Any], extra_terms: list[str] | None = None) -
             ],
             temperature=0.0,
             max_tokens=1600,
-            online=used_online,
         )
     except client.LLMError as exc:
         logger.warning("evidence corroboration failed: %s", exc)
@@ -146,10 +145,7 @@ def _format_context(anomaly: dict[str, Any], results: list[dict[str, Any]]) -> s
             for i, r in enumerate(results)
         )
     else:
-        blocks = (
-            "(No pre-fetched results — use your own web search tool if you have one, "
-            "and report only what you actually retrieve.)"
-        )
+        blocks = "(No results were returned for this query.)"
     return f"CONFIRMED WATER-LOSS EVENT\n{facts}\nSEARCH RESULTS\n{blocks}"
 
 
