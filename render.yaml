@@ -14,7 +14,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /api/health
-    plan: starter
+    plan: free
     envVars:
       - key: OPENROUTER_APP_NAME
         value: LoopSatellite
