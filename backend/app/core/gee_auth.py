@@ -68,16 +68,37 @@ def _unwrap(raw: str) -> str:
     return value
 
 
+def _shape(value: str) -> str:
+    """Describe the value without printing it.
+
+    A masked dashboard field and a redacted log leave nobody able to see what
+    actually arrived, so "not valid JSON" is where the debugging stops. Length
+    and the two end characters separate the three things that really happen —
+    truncated on paste, still wrapped in quotes, empty — and none of them reveal
+    any part of the token.
+    """
+    if not value:
+        return "Received an empty value."
+    return (
+        f"Received {len(value)} characters, starting {value[0]!r} and ending "
+        f"{value[-1]!r} (a whole credentials file starts '{{' and ends '}}', and "
+        f"is normally 300-500 characters)."
+    )
+
+
 def _build_credentials(raw: str) -> Any:
     from google.oauth2.credentials import Credentials
 
+    value = _unwrap(raw)
     try:
-        creds = json.loads(_unwrap(raw))
+        creds = json.loads(value)
     except json.JSONDecodeError as exc:
         raise EarthEngineUnavailable(
             "EARTHENGINE_CREDENTIALS_JSON is not valid JSON. It must be the entire "
             "contents of ~/.config/earthengine/credentials. In a .env file wrap it "
             "in single quotes; in a hosting dashboard paste it with no quotes at all."
+            f"\n{_shape(value)}"
+            f"\nJSON parser said: {exc.msg} at position {exc.pos}."
         ) from exc
 
     if not isinstance(creds, dict):
