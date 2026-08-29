@@ -2,6 +2,7 @@ import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slide
 
 import { formatMonth } from '../../lib/format'
 import type { Anomaly } from '../../lib/types'
+import { assetUrl } from '../../lib/api'
 
 /**
  * Before / after comparison for one flagged event.
@@ -13,8 +14,8 @@ import type { Anomaly } from '../../lib/types'
  * with no code change.
  */
 export function BeforeAfterSlider({ anomaly }: { anomaly: Anomaly }) {
-  const before = `/precomputed/chips/${anomaly.id}_before.svg`
-  const after = `/precomputed/chips/${anomaly.id}_after.svg`
+  const before = assetUrl(`precomputed/chips/${anomaly.id}_before.svg`)
+  const after = assetUrl(`precomputed/chips/${anomaly.id}_after.svg`)
 
   return (
     <div>

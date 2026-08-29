@@ -18,6 +18,19 @@ import type {
 // Empty base => same origin, which the Vite dev proxy forwards to the API.
 const BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
+/**
+ * A static file served by the API, not by whatever host serves this bundle.
+ *
+ * The before/after chips live under `precomputed/` on the API. A root-relative
+ * `/precomputed/...` works in development, because the Vite proxy forwards it —
+ * and breaks in production, where the frontend is on Vercel and the API is on
+ * Render, so the browser asks Vercel for a file it has never had. That is one
+ * broken image per finding, on the panel that is meant to be the evidence.
+ */
+export function assetUrl(path: string): string {
+  return `${BASE}/${path.replace(/^\/+/, '')}`
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,

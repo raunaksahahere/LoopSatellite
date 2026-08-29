@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { describeWindow, formatHectares, formatPercent, OUTCOME_LABEL } from '../../lib/format'
 import type { Anomaly, Outcome } from '../../lib/types'
 import { ConfidenceBadge } from '../ui/ConfidenceBadge'
+import { assetUrl } from '../../lib/api'
 
 /**
  * One row of the verification queue. Deliberately one action ("Review") — an
@@ -20,7 +21,7 @@ export function QueueCard({ anomaly }: { anomaly: Anomaly }) {
         aria-hidden="true"
       >
         <img
-          src={`/precomputed/chips/${anomaly.id}_after.svg`}
+          src={assetUrl(`precomputed/chips/${anomaly.id}_after.svg`)}
           alt=""
           loading="lazy"
           onError={(e) => {
