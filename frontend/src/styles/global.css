@@ -655,9 +655,23 @@ input[type='range'] { accent-color: var(--accent); }
   outline-offset: -1px;
 }
 
-/* Clerk ships its own card chrome. Ours is already the card, so let theirs be
-   plain and stop the two borders nesting. */
-.frontdoor__clerk { display: flex; justify-content: center; }
+/* Clerk's widget sits on a light card in both themes.
+   It shipped unreadable under a dark system theme: the panel is --surface, which
+   is #16211f there, and Clerk drew its own dark text onto it — headings and
+   field labels very nearly invisible while the inputs stayed white. Pinning the
+   card light is one decision to verify instead of two, and it reads as an inset
+   form rather than a theme arguing with itself. Colours are set alongside this
+   in CLERK_APPEARANCE; keep the two in step. */
+.frontdoor__clerk {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color-scheme: light;
+}
+
 .frontdoor__clerk .cl-rootBox,
 .frontdoor__clerk .cl-card {
   width: 100%;
@@ -665,6 +679,10 @@ input[type='range'] { accent-color: var(--accent); }
   border: 0;
   background: transparent;
 }
+
+/* Clerk's own footer already has a light ground; stop it painting a second one
+   inside a card that is now light too. */
+.frontdoor__clerk .cl-footer { background: transparent; }
 
 /* --- evidence strength and case status -------------------------------------
    Both sit directly under the headline numbers on a finding. They are quiet by

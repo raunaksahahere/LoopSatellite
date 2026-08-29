@@ -7,6 +7,40 @@ import { useSession } from '../lib/session'
 import { Loading, Note } from '../components/ui'
 
 /**
+ * Clerk's widget on a light card, in both themes.
+ *
+ * It shipped unreadable: the front door panel is `--surface`, which is #16211f
+ * under a dark system theme, and Clerk's default appearance drew its own dark
+ * text straight onto it. The headings and field labels were very nearly
+ * invisible while the inputs and its footer stayed white — a form nobody could
+ * fill in.
+ *
+ * Rather than theme the widget twice and re-check both, the card is pinned
+ * light and the colours are set explicitly. Measured against white: body ink
+ * 16.5:1, muted 7.3:1, the accent 6.0:1, and white on the accent button 6.0:1 —
+ * all clear AAA except the button, which is AA at its size. The surrounding
+ * panel stays dark, so the form reads as an inset card rather than a theme
+ * that lost an argument with itself.
+ */
+const CLERK_APPEARANCE = {
+  variables: {
+    colorBackground: '#ffffff',
+    colorText: '#16211f',
+    colorTextSecondary: '#4a5a57',
+    colorInputBackground: '#ffffff',
+    colorInputText: '#16211f',
+    colorPrimary: '#0f6f6c',
+    colorTextOnPrimaryBackground: '#ffffff',
+    colorNeutral: '#16211f',
+    borderRadius: '8px',
+  },
+  elements: {
+    rootBox: { width: '100%' },
+    card: { boxShadow: 'none', border: 'none', background: 'transparent' },
+  },
+} as const
+
+/**
  * The sign-in door at /welcome.
  *
  * One way in, and it has two halves: sign in, or create an account. The
@@ -88,14 +122,14 @@ export function WelcomePage() {
                   routing="virtual"
                   signUpUrl="/welcome"
                   forceRedirectUrl={destination}
-                  appearance={{ elements: { rootBox: { width: '100%' } } }}
+                  appearance={CLERK_APPEARANCE}
                 />
               ) : (
                 <SignUp
                   routing="virtual"
                   signInUrl="/welcome"
                   forceRedirectUrl={destination}
-                  appearance={{ elements: { rootBox: { width: '100%' } } }}
+                  appearance={CLERK_APPEARANCE}
                 />
               )}
             </div>
