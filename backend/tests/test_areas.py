@@ -88,7 +88,8 @@ def fake_gee(monkeypatch):
     ]
     monkeypatch.setattr(area_processing, "_gee_waterbodies", lambda geo: waterbodies)
 
-    def series(geo, wbs):
+    # `on_month` is the progress callback the real function reports through.
+    def series(geo, wbs, on_month=None):
         import math
 
         points = []
@@ -165,7 +166,7 @@ def test_too_little_history_is_skipped_rather_than_guessed(store, monkeypatch):
     monkeypatch.setattr(
         area_processing,
         "_gee_water_area_series",
-        lambda geo, wbs: {
+        lambda geo, wbs, on_month=None: {
             "WB_1": [
                 {"month": f"2025-{m:02d}", "water_area_m2": 1e5, "interpolated": False}
                 for m in range(1, 13)
@@ -257,3 +258,63 @@ def test_invalid_submissions_are_rejected_before_any_work(api, payload):
 
 def test_unknown_area_is_404(api):
     assert api.get("/api/areas/area_nope").status_code in (404, 503)
+
+
+# ---------------------------------------------------------------------------
+# A job that died leaves a row nobody will ever update again
+# ---------------------------------------------------------------------------
+def test_a_job_that_stopped_reporting_is_shown_as_failed():
+    """Regression, from four live submissions stuck on "Working" indefinitely.
+
+    The slow path runs inside the web process, so a restart takes the job *and*
+    the `except` clause that would have recorded the failure. Nothing else ever
+    touches that row, so the officer watches a progress bar that cannot move.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.area import Area
+    from app.services.areas import STALE_AFTER_MINUTES, _reap_if_stale
+
+    stale = Area(
+        id="a1", name="x", center_lat=22.5, center_lon=88.4, radius_km=1.0,
+        geojson={}, status="processing", progress="Measuring 1 water body",
+    )
+    stale.created_at = stale.updated_at = datetime.now(UTC) - timedelta(
+        minutes=STALE_AFTER_MINUTES + 1
+    )
+    reaped = _reap_if_stale(stale)
+    assert reaped.status == "failed"
+    assert "no longer running" in (reaped.error or "")
+
+
+def test_a_job_that_is_merely_slow_is_left_alone():
+    """Guards the guard. One Earth Engine month can take tens of seconds under
+    load; reaping a working job would be worse than the bug being fixed."""
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.area import Area
+    from app.services.areas import STALE_AFTER_MINUTES, _reap_if_stale
+
+    working = Area(
+        id="a2", name="x", center_lat=22.5, center_lon=88.4, radius_km=1.0,
+        geojson={}, status="processing", progress="month 4 of 36",
+    )
+    working.created_at = working.updated_at = datetime.now(UTC) - timedelta(
+        minutes=STALE_AFTER_MINUTES - 2
+    )
+    assert _reap_if_stale(working).status == "processing"
+
+
+def test_a_finished_job_is_never_reaped():
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.area import Area
+    from app.services.areas import _reap_if_stale
+
+    for status in ("ready", "failed", "pending"):
+        area = Area(
+            id=f"a-{status}", name="x", center_lat=22.5, center_lon=88.4,
+            radius_km=1.0, geojson={}, status=status,
+        )
+        area.created_at = area.updated_at = datetime.now(UTC) - timedelta(days=2)
+        assert _reap_if_stale(area).status == status

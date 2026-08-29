@@ -25,7 +25,9 @@ do that run well before any demo, not during one.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -86,10 +88,16 @@ async def _run(area_id: str) -> None:
     geometry = area["geojson"]
 
     await areas.update_status(area_id, "processing", progress="Connecting to Earth Engine")
-    initialize_earth_engine()
+    # Every Earth Engine call below is synchronous and takes minutes in total.
+    # Awaiting them directly blocked the one worker Render's free tier gives us:
+    # /api/health could not be answered, Render declared the instance
+    # unresponsive and restarted it, and the restart killed the job *before*
+    # process_area could record a failure. The row then sat on "processing"
+    # forever, which is what four submissions did.
+    await asyncio.to_thread(initialize_earth_engine)
 
     await areas.update_status(area_id, "processing", progress="Finding water bodies")
-    waterbodies = _gee_waterbodies(geometry)
+    waterbodies = await asyncio.to_thread(_gee_waterbodies, geometry)
     if not waterbodies:
         await areas.update_status(
             area_id,
@@ -101,16 +109,40 @@ async def _run(area_id: str) -> None:
         )
         return
 
+    body_label = "water body" if len(waterbodies) == 1 else "water bodies"
     await areas.update_status(
         area_id,
         "processing",
-        progress=f"Measuring {len(waterbodies)} water bodies across {YEARS_OF_HISTORY} years",
+        progress=f"Measuring {len(waterbodies)} {body_label} across {YEARS_OF_HISTORY} years",
         pond_count=len(waterbodies),
     )
-    series = _gee_water_area_series(geometry, waterbodies)
+
+    # Report from inside the month loop. Without this the row went quiet for the
+    # whole measurement — no way to tell a job that is working from one that
+    # died, either on screen or by looking at updated_at.
+    total_months = YEARS_OF_HISTORY * 12
+    loop = asyncio.get_running_loop()
+
+    def on_month(done: int) -> None:
+        loop.call_soon_threadsafe(
+            lambda: asyncio.ensure_future(
+                areas.update_status(
+                    area_id,
+                    "processing",
+                    progress=(
+                        f"Measuring {len(waterbodies)} {body_label} — "
+                        f"month {done} of {total_months}"
+                    ),
+                )
+            )
+        )
+
+    series = await asyncio.to_thread(
+        _gee_water_area_series, geometry, waterbodies, on_month
+    )
 
     await areas.update_status(area_id, "processing", progress="Separating season from event")
-    anomalies = _detect(series)
+    anomalies = await asyncio.to_thread(_detect, series)
 
     await areas.update_status(area_id, "processing", progress="Saving results")
     await _persist(area_id, area, waterbodies, series, anomalies)
@@ -164,7 +196,9 @@ def _gee_waterbodies(geojson: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _gee_water_area_series(
-    geojson: dict[str, Any], waterbodies: list[dict[str, Any]]
+    geojson: dict[str, Any],
+    waterbodies: list[dict[str, Any]],
+    on_month: Callable[[int], None] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Monthly MNDWI water area per water body, over YEARS_OF_HISTORY.
 
@@ -264,6 +298,8 @@ def _gee_water_area_series(
         except Exception as exc:  # noqa: BLE001 - one month must not lose the area
             failed += 1
             logger.warning("month %+d of the window failed: %s", offset, exc)
+        if on_month is not None:
+            on_month(offset + 1)
     if failed:
         logger.warning("%d of %d months failed", failed, YEARS_OF_HISTORY * 12)
     if not rows:

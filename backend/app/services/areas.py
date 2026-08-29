@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -82,11 +82,52 @@ async def create(
         return to_dict(area)
 
 
+#: A job that has not reported progress in this long is not working any more.
+#:
+#: The slow path runs inside the web process, so anything that restarts that
+#: process — a deploy, an out-of-memory kill, Render's free tier idling the
+#: instance — takes the job with it, and takes with it the `except` clause that
+#: would have recorded the failure. The row is then stuck on "processing" and
+#: the officer watches a progress bar that will never move again. Four
+#: submissions did exactly this before the measurement was moved off the event
+#: loop; that fixed the cause, and this makes the symptom self-clearing.
+#:
+#: Generous on purpose: a single Earth Engine month can take tens of seconds
+#: under load, and reaping a job that is merely slow would be worse than the
+#: problem.
+STALE_AFTER_MINUTES = 12
+
+
+def _reap_if_stale(area: Area) -> Area:
+    """Flip a job that has clearly died to `failed`, in memory.
+
+    Not written back here: this runs on a read path, and a read should not
+    surprise the caller with a write. `update_status` persists it the next time
+    anything touches the row; until then the officer at least sees the truth.
+    """
+    if area.status != "processing":
+        return area
+    last = area.updated_at or area.created_at
+    if last is None:
+        return area
+    if datetime.now(UTC) - last <= timedelta(minutes=STALE_AFTER_MINUTES):
+        return area
+
+    area.status = "failed"
+    area.progress = "Stopped"
+    area.error = (
+        "This job stopped reporting progress and is no longer running — the "
+        "server was most likely restarted while it was working. Nothing was "
+        "measured. Submitting the area again will start it over."
+    )
+    return area
+
+
 async def get(area_id: str) -> dict[str, Any] | None:
     _require_db()
     async with get_sessionmaker()() as session:
         area = await session.get(Area, area_id)
-        return to_dict(area) if area else None
+        return to_dict(_reap_if_stale(area)) if area else None
 
 
 async def list_areas(limit: int = 50) -> list[dict[str, Any]]:
@@ -95,7 +136,7 @@ async def list_areas(limit: int = 50) -> list[dict[str, Any]]:
         result = await session.execute(
             select(Area).order_by(Area.created_at.desc()).limit(limit)
         )
-        return [to_dict(a) for a in result.scalars().all()]
+        return [to_dict(_reap_if_stale(a)) for a in result.scalars().all()]
 
 
 async def update_status(
