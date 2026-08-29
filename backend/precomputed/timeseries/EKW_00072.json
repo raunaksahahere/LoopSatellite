@@ -1,511 +1,511 @@
 {
  "pond_id": "EKW_00072",
  "capacity_m2": 85223.6,
- "n_interpolated": 1,
+ "n_interpolated": 13,
  "points": [
   {
    "month": "2019-01",
-   "observed_m2": 60611.1,
-   "expected_m2": 60611.1,
+   "observed_m2": 84214.2,
+   "expected_m2": 84214.2,
    "interpolated": false
   },
   {
    "month": "2019-02",
-   "observed_m2": 54201.7,
-   "expected_m2": 54778.4,
+   "observed_m2": 80443.3,
+   "expected_m2": 81547.5,
    "interpolated": false
   },
   {
    "month": "2019-03",
-   "observed_m2": 53692.9,
-   "expected_m2": 54288.1,
+   "observed_m2": 79836.1,
+   "expected_m2": 78904.8,
    "interpolated": false
   },
   {
    "month": "2019-04",
-   "observed_m2": 59465.3,
-   "expected_m2": 59246.4,
+   "observed_m2": 75417.1,
+   "expected_m2": 75885.5,
    "interpolated": false
   },
   {
    "month": "2019-05",
-   "observed_m2": 64779.8,
-   "expected_m2": 64705.4,
+   "observed_m2": 81652.4,
+   "expected_m2": 80480.2,
    "interpolated": false
   },
   {
    "month": "2019-06",
-   "observed_m2": 74276.4,
-   "expected_m2": 73675.8,
+   "observed_m2": 82461.9,
+   "expected_m2": 79830.8,
    "interpolated": false
   },
   {
    "month": "2019-07",
-   "observed_m2": 75837.7,
-   "expected_m2": 75498.3,
+   "observed_m2": 69156.5,
+   "expected_m2": 71943.5,
    "interpolated": false
   },
   {
    "month": "2019-08",
-   "observed_m2": 83443.4,
-   "expected_m2": 83990.4,
+   "observed_m2": 78325.4,
+   "expected_m2": 77631.2,
    "interpolated": false
   },
   {
    "month": "2019-09",
-   "observed_m2": 79310.7,
-   "expected_m2": 79982.9,
+   "observed_m2": 79748.3,
+   "expected_m2": 78218.3,
    "interpolated": false
   },
   {
    "month": "2019-10",
-   "observed_m2": 81298.0,
-   "expected_m2": 81231.0,
+   "observed_m2": 83630.4,
+   "expected_m2": 83093.3,
    "interpolated": false
   },
   {
    "month": "2019-11",
-   "observed_m2": 72573.0,
-   "expected_m2": 73560.4,
+   "observed_m2": 83924.1,
+   "expected_m2": 81670.9,
    "interpolated": false
   },
   {
    "month": "2019-12",
-   "observed_m2": 65252.7,
-   "expected_m2": 65325.5,
+   "observed_m2": 83646.3,
+   "expected_m2": 83006.5,
    "interpolated": false
   },
   {
    "month": "2020-01",
-   "observed_m2": 59738.4,
-   "expected_m2": 60108.9,
+   "observed_m2": 85183.7,
+   "expected_m2": 85141.8,
    "interpolated": false
   },
   {
    "month": "2020-02",
-   "observed_m2": 58148.0,
-   "expected_m2": 54923.8,
+   "observed_m2": 83677.3,
+   "expected_m2": 83263.4,
    "interpolated": false
   },
   {
    "month": "2020-03",
-   "observed_m2": 55379.6,
-   "expected_m2": 54869.6,
+   "observed_m2": 78792.5,
+   "expected_m2": 80876.6,
    "interpolated": false
   },
   {
    "month": "2020-04",
-   "observed_m2": 58733.7,
-   "expected_m2": 59230.8,
+   "observed_m2": 78762.1,
+   "expected_m2": 78121.5,
    "interpolated": false
   },
   {
    "month": "2020-05",
-   "observed_m2": 64895.0,
-   "expected_m2": 65291.7,
+   "observed_m2": 78023.4,
+   "expected_m2": 80258.9,
    "interpolated": false
   },
   {
    "month": "2020-06",
-   "observed_m2": 71037.9,
-   "expected_m2": 72601.4,
+   "observed_m2": 73428.6,
+   "expected_m2": 77939.1,
    "interpolated": false
   },
   {
    "month": "2020-07",
-   "observed_m2": 74622.6,
-   "expected_m2": 75982.2,
-   "interpolated": false
+   "observed_m2": 73966.0,
+   "expected_m2": 72568.0,
+   "interpolated": true
   },
   {
    "month": "2020-08",
-   "observed_m2": 79364.1,
-   "expected_m2": 83840.7,
-   "interpolated": false
+   "observed_m2": 74503.4,
+   "expected_m2": 75588.8,
+   "interpolated": true
   },
   {
    "month": "2020-09",
-   "observed_m2": 80868.2,
-   "expected_m2": 80222.2,
-   "interpolated": false
+   "observed_m2": 75040.8,
+   "expected_m2": 79865.8,
+   "interpolated": true
   },
   {
    "month": "2020-10",
-   "observed_m2": 78817.0,
-   "expected_m2": 79799.5,
+   "observed_m2": 75578.2,
+   "expected_m2": 83776.9,
    "interpolated": false
   },
   {
    "month": "2020-11",
-   "observed_m2": 73620.7,
-   "expected_m2": 72727.2,
+   "observed_m2": 80646.6,
+   "expected_m2": 82679.5,
    "interpolated": false
   },
   {
    "month": "2020-12",
-   "observed_m2": 63268.5,
-   "expected_m2": 65023.9,
+   "observed_m2": 85223.6,
+   "expected_m2": 84521.9,
    "interpolated": false
   },
   {
    "month": "2021-01",
-   "observed_m2": 57853.7,
-   "expected_m2": 59783.8,
+   "observed_m2": 85162.2,
+   "expected_m2": 85090.1,
    "interpolated": false
   },
   {
    "month": "2021-02",
-   "observed_m2": 54927.0,
-   "expected_m2": 55134.9,
+   "observed_m2": 84548.7,
+   "expected_m2": 83776.4,
    "interpolated": false
   },
   {
    "month": "2021-03",
-   "observed_m2": 54092.7,
-   "expected_m2": 55138.6,
+   "observed_m2": 83730.5,
+   "expected_m2": 81155.9,
    "interpolated": false
   },
   {
    "month": "2021-04",
-   "observed_m2": 61509.1,
-   "expected_m2": 58583.8,
+   "observed_m2": 79024.8,
+   "expected_m2": 79545.9,
    "interpolated": false
   },
   {
    "month": "2021-05",
-   "observed_m2": 64598.3,
-   "expected_m2": 65429.2,
+   "observed_m2": 79714.5,
+   "expected_m2": 78903.5,
    "interpolated": false
   },
   {
    "month": "2021-06",
-   "observed_m2": 71197.9,
-   "expected_m2": 71321.8,
+   "observed_m2": 73554.3,
+   "expected_m2": 75382.3,
    "interpolated": false
   },
   {
    "month": "2021-07",
-   "observed_m2": 79725.3,
-   "expected_m2": 76155.6,
-   "interpolated": false
+   "observed_m2": 77472.0,
+   "expected_m2": 72130.3,
+   "interpolated": true
   },
   {
    "month": "2021-08",
-   "observed_m2": 84620.0,
-   "expected_m2": 83481.8,
+   "observed_m2": 81389.7,
+   "expected_m2": 72711.6,
    "interpolated": false
   },
   {
    "month": "2021-09",
-   "observed_m2": 79592.4,
-   "expected_m2": 80498.2,
-   "interpolated": false
+   "observed_m2": 82253.2,
+   "expected_m2": 81103.2,
+   "interpolated": true
   },
   {
    "month": "2021-10",
-   "observed_m2": 78348.0,
-   "expected_m2": 78227.6,
+   "observed_m2": 83116.7,
+   "expected_m2": 84437.4,
    "interpolated": false
   },
   {
    "month": "2021-11",
-   "observed_m2": 72238.0,
-   "expected_m2": 71932.1,
+   "observed_m2": 82307.2,
+   "expected_m2": 84194.5,
    "interpolated": false
   },
   {
    "month": "2021-12",
-   "observed_m2": 65680.6,
-   "expected_m2": 64580.9,
+   "observed_m2": 83782.5,
+   "expected_m2": 86923.7,
    "interpolated": false
   },
   {
    "month": "2022-01",
-   "observed_m2": 60131.3,
-   "expected_m2": 59504.1,
+   "observed_m2": 83429.9,
+   "expected_m2": 85291.6,
    "interpolated": false
   },
   {
    "month": "2022-02",
-   "observed_m2": 56131.7,
-   "expected_m2": 55655.2,
+   "observed_m2": 85028.7,
+   "expected_m2": 83394.5,
    "interpolated": false
   },
   {
    "month": "2022-03",
-   "observed_m2": 56382.0,
-   "expected_m2": 55706.7,
+   "observed_m2": 79906.1,
+   "expected_m2": 80658.1,
    "interpolated": false
   },
   {
    "month": "2022-04",
-   "observed_m2": 57669.3,
-   "expected_m2": 58347.7,
+   "observed_m2": 79116.0,
+   "expected_m2": 79837.7,
    "interpolated": false
   },
   {
    "month": "2022-05",
-   "observed_m2": 61161.6,
-   "expected_m2": 65901.5,
+   "observed_m2": 75660.3,
+   "expected_m2": 76579.8,
    "interpolated": false
   },
   {
    "month": "2022-06",
-   "observed_m2": 69349.4,
-   "expected_m2": 70835.9,
-   "interpolated": false
+   "observed_m2": 72921.8,
+   "expected_m2": 73558.1,
+   "interpolated": true
   },
   {
    "month": "2022-07",
-   "observed_m2": 80652.1,
-   "expected_m2": 76682.0,
-   "interpolated": false
+   "observed_m2": 70183.2,
+   "expected_m2": 69984.5,
+   "interpolated": true
   },
   {
    "month": "2022-08",
-   "observed_m2": 82984.1,
-   "expected_m2": 83582.8,
+   "observed_m2": 67444.7,
+   "expected_m2": 68814.2,
    "interpolated": false
   },
   {
    "month": "2022-09",
-   "observed_m2": 81539.2,
-   "expected_m2": 80968.4,
+   "observed_m2": 78205.0,
+   "expected_m2": 81058.2,
    "interpolated": false
   },
   {
    "month": "2022-10",
-   "observed_m2": 76047.0,
-   "expected_m2": 77206.8,
+   "observed_m2": 81513.7,
+   "expected_m2": 83563.5,
    "interpolated": false
   },
   {
    "month": "2022-11",
-   "observed_m2": 70376.6,
-   "expected_m2": 71276.5,
+   "observed_m2": 81511.0,
+   "expected_m2": 84663.9,
    "interpolated": false
   },
   {
    "month": "2022-12",
-   "observed_m2": 63889.0,
-   "expected_m2": 64381.7,
+   "observed_m2": 85223.6,
+   "expected_m2": 88560.8,
    "interpolated": false
   },
   {
    "month": "2023-01",
-   "observed_m2": 60264.6,
-   "expected_m2": 59013.9,
+   "observed_m2": 82067.0,
+   "expected_m2": 86303.8,
    "interpolated": false
   },
   {
    "month": "2023-02",
-   "observed_m2": 55324.2,
-   "expected_m2": 55708.5,
+   "observed_m2": 79038.4,
+   "expected_m2": 82321.9,
    "interpolated": false
   },
   {
    "month": "2023-03",
-   "observed_m2": 56071.4,
-   "expected_m2": 55910.2,
+   "observed_m2": 85164.6,
+   "expected_m2": 78830.6,
    "interpolated": false
   },
   {
    "month": "2023-04",
-   "observed_m2": 58715.3,
-   "expected_m2": 58616.3,
+   "observed_m2": 78360.6,
+   "expected_m2": 78180.9,
    "interpolated": false
   },
   {
    "month": "2023-05",
-   "observed_m2": 66730.6,
-   "expected_m2": 66749.2,
+   "observed_m2": 81582.1,
+   "expected_m2": 75747.2,
    "interpolated": false
   },
   {
    "month": "2023-06",
-   "observed_m2": 74427.1,
-   "expected_m2": 71392.4,
+   "observed_m2": 82066.6,
+   "expected_m2": 66732.4,
    "interpolated": false
   },
   {
    "month": "2023-07",
-   "observed_m2": 77883.8,
-   "expected_m2": 77350.4,
-   "interpolated": false
+   "observed_m2": 81402.4,
+   "expected_m2": 65737.3,
+   "interpolated": true
   },
   {
    "month": "2023-08",
-   "observed_m2": 82883.6,
-   "expected_m2": 82813.7,
-   "interpolated": false
+   "observed_m2": 80738.1,
+   "expected_m2": 64461.1,
+   "interpolated": true
   },
   {
    "month": "2023-09",
-   "observed_m2": 80914.5,
-   "expected_m2": 81422.1,
+   "observed_m2": 80073.9,
+   "expected_m2": 82859.7,
    "interpolated": false
   },
   {
    "month": "2023-10",
-   "observed_m2": 75968.5,
-   "expected_m2": 77465.5,
+   "observed_m2": 81724.8,
+   "expected_m2": 84975.2,
    "interpolated": false
   },
   {
    "month": "2023-11",
-   "observed_m2": 71681.4,
-   "expected_m2": 70025.5,
+   "observed_m2": 84620.0,
+   "expected_m2": 87383.1,
    "interpolated": false
   },
   {
    "month": "2023-12",
-   "observed_m2": 64019.6,
-   "expected_m2": 65020.2,
+   "observed_m2": 85032.6,
+   "expected_m2": 93938.7,
    "interpolated": false
   },
   {
    "month": "2024-01",
-   "observed_m2": 56786.6,
-   "expected_m2": 59021.7,
+   "observed_m2": 85154.5,
+   "expected_m2": 87958.5,
    "interpolated": false
   },
   {
    "month": "2024-02",
-   "observed_m2": 55102.0,
-   "expected_m2": 55771.4,
+   "observed_m2": 83960.3,
+   "expected_m2": 81300.2,
    "interpolated": false
   },
   {
    "month": "2024-03",
-   "observed_m2": 55499.5,
-   "expected_m2": 55826.0,
+   "observed_m2": 72588.6,
+   "expected_m2": 77272.0,
    "interpolated": false
   },
   {
    "month": "2024-04",
-   "observed_m2": 57974.2,
-   "expected_m2": 58378.8,
+   "observed_m2": 35066.5,
+   "expected_m2": 76363.6,
    "interpolated": false
   },
   {
    "month": "2024-05",
-   "observed_m2": 66752.5,
-   "expected_m2": 66893.4,
+   "observed_m2": 17150.8,
+   "expected_m2": 73095.0,
    "interpolated": false
   },
   {
    "month": "2024-06",
-   "observed_m2": 71803.4,
-   "expected_m2": 71017.3,
-   "interpolated": false
+   "observed_m2": 33526.9,
+   "expected_m2": 60162.9,
+   "interpolated": true
   },
   {
    "month": "2024-07",
-   "observed_m2": 77366.0,
-   "expected_m2": 76658.0,
-   "interpolated": false
+   "observed_m2": 49903.0,
+   "expected_m2": 58858.9,
+   "interpolated": true
   },
   {
    "month": "2024-08",
-   "observed_m2": 77247.0,
-   "expected_m2": 81307.5,
-   "interpolated": false
+   "observed_m2": 66279.1,
+   "expected_m2": 57916.4,
+   "interpolated": true
   },
   {
    "month": "2024-09",
-   "observed_m2": 85223.6,
-   "expected_m2": 81146.7,
+   "observed_m2": 82655.2,
+   "expected_m2": 81856.9,
    "interpolated": false
   },
   {
    "month": "2024-10",
-   "observed_m2": 76920.4,
-   "expected_m2": 77073.7,
+   "observed_m2": 85035.8,
+   "expected_m2": 83796.9,
    "interpolated": false
   },
   {
    "month": "2024-11",
-   "observed_m2": 72338.4,
-   "expected_m2": 68233.2,
+   "observed_m2": 84307.7,
+   "expected_m2": 87831.9,
    "interpolated": false
   },
   {
    "month": "2024-12",
-   "observed_m2": 63821.9,
-   "expected_m2": 65233.2,
+   "observed_m2": 84245.2,
+   "expected_m2": 97272.2,
    "interpolated": false
   },
   {
    "month": "2025-01",
-   "observed_m2": 58536.4,
-   "expected_m2": 58495.2,
+   "observed_m2": 85223.6,
+   "expected_m2": 87777.7,
    "interpolated": false
   },
   {
    "month": "2025-02",
-   "observed_m2": 56127.9,
-   "expected_m2": 55865.0,
+   "observed_m2": 61942.8,
+   "expected_m2": 78226.7,
    "interpolated": false
   },
   {
    "month": "2025-03",
-   "observed_m2": 56231.9,
-   "expected_m2": 56419.0,
+   "observed_m2": 54742.6,
+   "expected_m2": 73567.9,
    "interpolated": false
   },
   {
    "month": "2025-04",
-   "observed_m2": 59498.2,
-   "expected_m2": 59176.9,
+   "observed_m2": 53902.3,
+   "expected_m2": 73534.5,
    "interpolated": false
   },
   {
    "month": "2025-05",
-   "observed_m2": 63763.7,
-   "expected_m2": 68017.4,
+   "observed_m2": 51548.3,
+   "expected_m2": 70234.9,
    "interpolated": false
   },
   {
    "month": "2025-06",
-   "observed_m2": 71631.2,
-   "expected_m2": 71573.3,
+   "observed_m2": 33931.1,
+   "expected_m2": 53177.2,
    "interpolated": false
   },
   {
    "month": "2025-07",
-   "observed_m2": 75754.3,
-   "expected_m2": 76237.3,
-   "interpolated": false
+   "observed_m2": 32217.3,
+   "expected_m2": 51351.4,
+   "interpolated": true
   },
   {
    "month": "2025-08",
-   "observed_m2": 80953.1,
-   "expected_m2": 80295.2,
+   "observed_m2": 30503.6,
+   "expected_m2": 49209.5,
    "interpolated": false
   },
   {
    "month": "2025-09",
-   "observed_m2": 82165.0,
-   "expected_m2": 81347.3,
+   "observed_m2": 24150.7,
+   "expected_m2": 76205.2,
    "interpolated": false
   },
   {
    "month": "2025-10",
-   "observed_m2": 79008.1,
-   "expected_m2": 77352.1,
+   "observed_m2": 19020.7,
+   "expected_m2": 74474.9,
    "interpolated": false
   },
   {
    "month": "2025-11",
-   "observed_m2": 67843.7,
-   "expected_m2": 67164.0,
+   "observed_m2": 63790.5,
+   "expected_m2": 76153.1,
    "interpolated": false
   },
   {
    "month": "2025-12",
-   "observed_m2": 67843.7,
-   "expected_m2": 65725.6,
-   "interpolated": true
+   "observed_m2": 75673.0,
+   "expected_m2": 85684.8,
+   "interpolated": false
   }
  ]
 }

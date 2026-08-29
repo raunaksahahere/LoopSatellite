@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-28T17:48:09+00:00",
+ "generated_at": "2026-08-28T18:56:41+00:00",
  "study_area": "East Kolkata Wetlands, West Bengal (Ramsar site 1208)",
  "pond_count": 160,
- "anomaly_count": 12,
+ "anomaly_count": 414,
  "pond_provenance": [
   "openstreetmap"
  ],
@@ -11,10 +11,6 @@
  ],
  "is_synthetic": true,
  "fallbacks": [
-  {
-   "step": "04_postprocess_timeseries",
-   "reason": "no Sentinel-2 exports in work/gee_exports: run 03_run_wsa_gee.js in the Earth Engine Code Editor and download the CSVs there"
-  },
   {
    "step": "06_built_up_classifier",
    "reason": "no NDBI/BSI export in work/gee_exports: see the companion snippet in 06_built_up_classifier.py"

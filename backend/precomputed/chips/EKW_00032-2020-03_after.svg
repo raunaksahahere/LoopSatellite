@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img"
+     aria-label="Schematic water extent, Pond near GP Block, 2020-04: 9% of pond boundary">
+  <rect width="320" height="320" fill="#e8e2d6"/>
+  <rect x="24" y="24" width="272" height="272" fill="none"
+        stroke="#8a8578" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect x="118.2" y="118.2" width="83.6" height="83.6" fill="#7a5c3e" opacity="0.9"/>
+  <text x="24" y="294" font-family="system-ui, sans-serif" font-size="14"
+        fill="#2c2a26">2020-04 — 9% water</text>
+  <text x="24" y="312" font-family="system-ui, sans-serif" font-size="10"
+        fill="#6b6659">Schematic extent, not imagery</text>
+</svg>
