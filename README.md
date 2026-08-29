@@ -29,8 +29,12 @@ the build if that line is ever crossed.
 ## The golden rule
 
 All satellite processing happens **offline, before the demo**, and lands in
-`backend/precomputed/` (~650 KB). The live app only reads those files. It never
-triggers an Earth Engine computation and never downloads anything.
+`backend/precomputed/`. The live app only reads those files: it never triggers an
+Earth Engine computation and never downloads anything.
+
+The one deliberate exception is "monitor a new area", which is a different
+feature with a different contract — it is explicitly slow, it says so on screen,
+and it never falls back to synthesis. See below.
 
 ---
 
@@ -44,7 +48,7 @@ Blurring them ruins both, so they are separate in the code and a tab apart in th
 | Cost | milliseconds | **minutes** |
 | Touches Earth Engine | never | yes |
 | Code | `services/llm/nl_query.py` → `stl_esd.find_near` | `services/areas.py` → `services/area_processing.py` |
-| Demo it live? | yes — this *is* the demo | **no** |
+| Demo it live? | yes — this *is* the demo | only if you have two minutes |
 
 The slow path is slow for a real reason: telling a filled-in pond apart from one
 that is simply between seasons needs about two years of history for that specific
@@ -55,6 +59,10 @@ an explanation rather than a spinner implying it is nearly done.
 only answer for places already measured — and when they haven't been, it says so
 plainly instead of reporting a false all-clear.
 
+The slow path does work now, and finishes in about two minutes, but it is still
+the wrong thing to run live: it is billed to a personal Earth Engine quota, it is
+capped per user per day, and a free-tier restart can still take a job with it.
+
 ---
 
 ## Google Earth Engine, without a service account
@@ -62,6 +70,20 @@ plainly instead of reporting a false all-clear.
 `earthengine authenticate` writes a personal OAuth refresh token to
 `~/.config/earthengine/credentials`. That whole file, on one line, goes into
 `EARTHENGINE_CREDENTIALS_JSON`; the project id goes into `GEE_PROJECT_ID`.
+
+Three things that each look like a broken credential and are not:
+
+- Current versions of that command write **no `client_id` or `client_secret`** —
+  the OAuth client is the Earth Engine library's own. The file is complete
+  without them.
+- **Quoting depends on where you paste it.** A `.env` file needs it in single
+  quotes, because the value is full of double quotes and dotenv stops at the
+  first one. A hosting dashboard takes the value literally, so paste it bare.
+  Both are accepted, but the wrong one used to read as "not valid JSON".
+- **Enabling the Earth Engine API and registering the project are two different
+  steps**, in two different consoles, and the errors are easy to confuse. The
+  token must also belong to an account with access to that project — a Cloud
+  console URL carrying `authuser=3` is a warning sign.
 
 
 **Know what this trades away.** The token carries a *person's* Google identity and
@@ -92,10 +114,13 @@ explicit, never `*`. On Vercel, set `VITE_API_BASE_URL` to the Render URL.
 
 Two things to know before relying on it:
 
-- **Render's free tier sleeps on inactivity**, which would kill an area-processing
-  job mid-flight; `render.yaml` asks for `starter` for that reason. If the slow
-  path ever becomes load-bearing, move it to a Background Worker with a real
-  queue rather than trusting the web process to stay awake.
+- **The slow path runs inside the web process.** Its Earth Engine calls are
+  synchronous and take minutes, so they run in a worker thread — awaiting them on
+  the event loop starved the health check, Render restarted the instance as
+  unresponsive, and the restart killed the job along with the handler that would
+  have recorded the failure. Jobs that stop reporting for twelve minutes are
+  marked failed rather than left spinning. If this ever becomes load-bearing it
+  belongs in a Background Worker with a real queue, not in the web process at all.
 - **Neon's connection string works exactly as printed.** `config.py` rewrites the
   driver to asyncpg and translates `sslmode` / `channel_binding`, which asyncpg
   rejects outright.
@@ -104,21 +129,33 @@ Two things to know before relying on it:
 
 ## Getting in
 
-`/welcome` is the front door. Two ways through it:
+`/` is a public homepage explaining what the tool measures and how. `/welcome` is
+the door: **sign in, or create an account** — both through Clerk, both on the same
+screen.
 
-- **Sign in** — a real operator, via Neon Managed Better Auth. Can record
-  verifications and start monitoring new areas.
-- **Continue as demo** — sees every finding, writes nothing. This is how a judge
-  uses the whole product without an account.
+There is no "continue as demo". There used to be, because a visitor with no
+account had no way in at all; Clerk offers sign-up, so the reason is gone, and
+with it a header anyone could send to read the entire API without ever having an
+account. Two states now: a valid Clerk JWT, or 401.
 
-The demo door is not a hole. The API gives it a distinct read-only principal and
-returns 403 on the two routes that cost something: recording a verdict, and
-`POST /api/areas`, which spends Earth Engine quota against a personal token.
+The API verifies the token itself against Clerk's published keys — `iss` against
+`CLERK_ISSUER`, and `azp` against `CLERK_AUTHORIZED_PARTIES` when set, which is
+what stops a token minted for this instance being replayed from someone else's
+page. The React route guard decides what *renders*; it guards nothing on its own.
 
-With `NEON_AUTH_URL` unset — which is how this ships — the API runs open, says so
-at startup and in `/api/health`, and the front door offers only the demo button.
-Set `AUTH_REQUIRED=true` on a deployment and the app refuses to boot without an
-auth URL rather than quietly serving everything to everyone.
+**Any signed-in user can submit an area.** That is deliberate, and it is also the
+one route that costs money — a real Sentinel-2 pull billed to a personal Earth
+Engine token. So it is capped over a rolling 24 hours, per person and per
+deployment (`AREA_QUOTA_PER_USER_PER_DAY`, `AREA_QUOTA_PER_DAY`), counted in
+Postgres rather than in memory because a free-tier instance sleeps and may run
+more than one worker. Over the cap is a 429 with `Retry-After`, and
+`/api/areas/capability` reports the remaining allowance so the button can say so
+before anyone fills in a form.
+
+With `CLERK_ISSUER` unset — which is how this ships — the API runs open and says
+so at startup and in `/api/health`. Set `AUTH_REQUIRED=true` on a deployment and
+it refuses to boot unconfigured rather than quietly serving everything to
+everyone.
 
 ---
 
@@ -136,16 +173,24 @@ Three things could reach for the network mid-demo. None of them does.
 cd backend && .venv/bin/python -m app.llm_warm
 ```
 
-Warming the whole bundle — four example questions, eleven reports, eleven notices
-and the whole-site report — took **93 seconds** once. Re-running takes **0.17
-seconds** and makes no requests. With the network physically severed, a radius
-question and a grounded notice both answer in about **2 milliseconds**.
+Warming the demo surface — the four example questions, plus a report and a notice
+for the events a demo touches, plus the whole-site report — takes about a minute
+once. Re-running makes no requests at all. Verified with `httpx` patched to raise
+on any send: **every warm job served from cache, zero network calls, 0.01
+seconds**.
+
+The cache is keyed on a hash of the exact messages, so warming can safely happen
+at request time too — a new question adds an entry and can never overwrite a
+warmed one. It is also keyed loosely enough to survive a provider change: when
+this moved from OpenRouter to Google AI Studio, `llm_warm` reported *"warmed 0 ·
+already cached 27"* and the migration cost nothing to re-warm.
 
 If the cache misses anyway, a 429 is retried with exponential backoff (honouring
-Google's `Retry-After`); if the provider is still rate limited after
-`LLM_MAX_RETRIES`, every feature degrades to its deterministic path and says so. The
-notice still quotes the real Rules either way — that comes from retrieval, not
-from the model.
+Google's `Retry-After`), inside a wall-clock budget (`LLM_TOTAL_BUDGET`, default
+75s) with an explicit per-request timeout — so a stalled free-tier endpoint
+degrades to the deterministic path in bounded time instead of holding a web
+request open for minutes. The notice still quotes the real Rules either way; that
+comes from retrieval, not from the model.
 
 One caveat: the notice prompt embeds today's date, so notice cache entries go
 stale at midnight. Re-run `llm_warm` on the morning of a demo.
@@ -154,92 +199,143 @@ stale at midnight. Re-run `llm_warm` on the morning of a demo.
 
 ## Data — read this before demoing
 
-The bundle currently in `backend/precomputed/` is **synthetic demonstration
-data**. Running `./run_pipeline.sh` with no arguments looks for real inputs, does
-not find them, says so loudly, and synthesises instead — so a fresh clone gets a
-working bundle with zero setup. Each fallback is announced in the terminal at the
-time **and** recorded in `manifest.json`, which is what feeds the
-[data sources page](#seeing-what-is-real). It is labelled as such everywhere
-it surfaces: `manifest.json` carries `is_synthetic: true`, every pond's
-`provenance` reads `synthetic-demo`, the app shows a banner, and every PDF
-carries a warning box.
+**The bundle in `backend/precomputed/` is measured, not invented.**
+`manifest.json` carries `is_synthetic: false`, there are no recorded fallbacks,
+and the pipeline finishes with *"Done — every step ran on real inputs."*
 
-It exists because the real path needs Earth Engine credentials, an asset upload
-and a few hours of export time — none of which belong in a live demo. The
-synthetic scene table is physically shaped like a real one (Sentinel-2 revisit
-cadence, monsoon cloud loss, the real seasonal cycle of a bheri) and it goes
-through **exactly the same detector**: steps 04–07 do not know the difference.
+| | |
+|---|---|
+| Pond boundaries | **160 real polygons**, OpenStreetMap water and aquaculture over the EKW extent (ODbL) |
+| Water surface | **104,160 Sentinel-2 measurements**, 2019–2026, 84 monthly points per pond |
+| What replaced the water | **Real NDBI/BSI**, 414 windows, none failed |
+| Findings | **414 water-loss events** — 35 high confidence, 239 medium, 140 low; 39 never recovered |
 
-Six ponds have an encroachment injected and two have a temporary drawdown. The
-detector recovers all six, ranks them above both drawdowns, and marks the
-drawdowns as recovered. That is the product claim, tested.
+Real data is noisier than invented data and the numbers say so: an earlier
+synthetic bundle produced 12 tidy events, and the conversion split moved the
+other way once a generator told to make encroachment obvious was replaced by a
+measurement that was not.
 
-Drop real inputs in and the same command stops synthesising, step by step —
-a digitised pond layer via `--input`, Sentinel-2 exports in
-`work/gee_exports/`. There is no flag to remember.
+Some of it is worth knowing before you trust a single finding. **Median 6 clear
+satellite passes** stand behind a flagged window, but the range runs 0 to 59, and
+**14 of the 414 rest on no clear pass at all** — windows reconstructed entirely
+from neighbouring months because cloud left nothing usable. Every finding states
+its own pass count on screen rather than leaving you to assume.
+
+Running `./run_pipeline.sh` with no arguments still uses whatever real inputs
+exist and synthesises only what is missing, announcing each fallback in the
+terminal **and** in `manifest.json` — so a fresh clone with no credentials gets a
+working, clearly-labelled bundle with zero setup. There is no flag to remember;
+dropping real inputs in is what makes it stop synthesising.
 
 ## Seeing what is real
 
-`/data-sources` in the app answers "how do we know this works on real data?" with
-a URL rather than a paragraph in this file. Every layer — application, basemap,
-place names, legal corpus, pond boundaries, measurements, the detector, the
-spectral verdict, the comparison chips, and the live area pipeline — carries a
-status (real / synthetic / not run), what produced what is on screen right now,
-and what would produce it for real.
+`/data-sources` answers "how do we know this works on real data?" with a URL
+rather than a paragraph in this file. Every layer carries a status, what produced
+what is on screen right now, and what would produce it for real. The statuses are
+declared in the code that serves the page and the evidence is read from disk, so
+a bundle cannot flatter itself.
 
-The statuses are declared in the code that serves the page, and the evidence is
-read from disk, so a bundle cannot flatter itself. Today four layers are real, four
-are synthetic, one is partly real and one has never been run.
+**Eight of ten layers are real:** the application, the basemap, place names, the
+legal corpus, pond boundaries, water measurements, the detector, and the spectral
+verdict. The two that are not say so — the before/after chips are scale diagrams
+of measured extent rather than photographs, and the live "monitor a new area"
+path is listed as what it is.
 
-**To run it on real data:**
+**Reproducing the bundle from scratch**, with Earth Engine credentials and a
+registered Cloud project:
 
 1. `data_pipeline/00_reproduce_eowater/` — reproduce EOWater's NSW sample first.
-   This is a go/no-go: if upstream doesn't reproduce on your machine, nothing
-   downstream is trustworthy.
-2. `01_polygon_mask.py --input <your digitised pond layer>.geojson`
-3. `02_upload_gee_assets.py --user you@gmail.com`
-4. Paste `03_run_wsa_gee.js` into the GEE Code Editor and run the exports.
-5. Drop the CSVs into `data_pipeline/work/gee_exports/` and run
-   `./run_pipeline.sh` (no `--demo`).
+   A go/no-go: if upstream does not reproduce on your machine, nothing downstream
+   is trustworthy.
+2. `01a_fetch_osm_ponds.py` — real pond boundaries from OpenStreetMap, with block
+   and locality labels taken from OSM administrative relations and place nodes.
+   KMC ward numbers are not mapped in OSM, so they are left empty rather than
+   invented.
+3. `03_run_wsa_gee.py` — monthly water area per pond, straight to CSV. The
+   `.js` twin still works in the Code Editor; the Python port exists because a
+   step needing a human in a browser is a step that never runs, which is why this
+   project shipped on synthetic measurements for as long as it did.
+4. `06a_export_spectral.py` — NDBI/BSI before and after each flagged window.
+5. `./run_pipeline.sh` — steps 01 and 04–07, using every real input it finds.
 
 Nothing else changes. The API, the UI and the tests are indifferent to which
-bundle they are serving — except that the synthetic warnings disappear.
-
----
+bundle they serve — except that the synthetic warnings disappear.
 
 ## What it does
 
-**The verification queue is the home screen.** A ranked list of water losses the
-season does not explain — highest confidence and largest loss first — each with a
-before/after chip, a colour-coded confidence badge, and one button: *Review*.
+### The map — `/map`
 
-**Open one and you get the case.** The monthly series with the seasonal
-expectation drawn over it, the before/after slider, a plain-language account of
-why it was flagged, and what the surface reads as now.
+160 measured pond boundaries over the wetlands, coloured by whether anything is
+flagged and how confident it is. Click a pond for its case. Two modes sit above
+it, and they are two different features rather than two spellings of one:
 
-Then four things a language model does, none of which can change the finding:
+**Ask about an area** answers in milliseconds from measurements already made.
+**Monitor a new area** starts a real satellite pull and takes minutes.
 
-1. **Evidence corroboration** — searches the public record for this mouza and
+### The verification queue — `/queue`
+
+A ranked list of the water losses the season does not explain, highest confidence
+and largest loss first, each with a before/after chip, a confidence badge and one
+button. This is the working screen.
+
+### One finding — `/pond/:id`
+
+- **The chart** — 84 monthly points of measured water area with the seasonal
+  expectation drawn over it, the flagged window shaded, and months with no usable
+  pass drawn hollow rather than silently interpolated into the line.
+- **Before and after** — a slider over scale diagrams of the measured extent.
+  Labelled as diagrams, because they are not photographs.
+- **How well observed it is** — the confidence band, how many clear satellite
+  passes fell inside the window, how many months had none, and how much of the
+  pond was visible on average. Deliberately *not* an error bar: the detector
+  scores confidence, it does not estimate a range around the loss percentage, and
+  inventing one would be the same sin as inventing the measurement.
+- **Where it has got to** — awaiting review, or the verdict recorded against it
+  and what that means next. There is no "filed with the pollution control board"
+  state, because nothing here files anything.
+- **Why it was flagged** — the loss, the area, the window, whether it came back,
+  in plain words, with the statistics one disclosure triangle away.
+- **What replaced the water** — the measured spectral verdict: built up, bare
+  earth, or neither.
+- **Record a verdict** — confirmed, seasonal, unclear, or already being dealt
+  with, with a note. The one write in the product.
+
+### Four things a language model does — none of which can change a finding
+
+1. **Evidence corroboration** — searches the public record for this locality and
    this window; returns findings with links and an explicit relevance verdict, or
    says plainly that it found nothing.
 2. **Regulatory grounding and notice drafting** — retrieves the provisions
-   engaged from the source instruments, quotes them verbatim with citations, and
-   drafts a show-cause notice around them. If retrieval finds nothing relevant it
-   **does not draft**. If the draft cites a provision that was not retrieved, the
-   draft is discarded.
+   engaged from the source instruments (96 chunks of the Wetlands (Conservation
+   and Management) Rules, 2017, quoted verbatim with citations) and drafts a
+   show-cause notice around them. If retrieval finds nothing relevant it **does
+   not draft**. If a draft cites a provision that was not retrieved, the draft is
+   discarded.
 3. **Natural-language query** — "which ponds in Ward 108 lost more than 20% and
    never recovered", or "problems around Haldia within 5 km". The model turns the
-   sentence into a filter; the filter runs in Python against the precomputed data;
-   the map flies to the place, draws the radius, and highlights the answer. The
-   model never sees a number, never resolves a coordinate, and the filter it
-   produced is shown back to you.
+   sentence into a filter; the filter runs in Python against measured data; the
+   map flies to the place, draws the radius and highlights the answer. The model
+   never sees a number and never resolves a coordinate — every coordinate comes
+   from a **cached gazetteer of 56 West Bengal places**, built once from Nominatim
+   and committed, so no geocoding call happens at request time. A place we do not
+   have says so and offers the ones we do. A distance is only ever drawn if the
+   question actually contained one; otherwise the default radius is used and
+   labelled as an assumption.
+4. **Report writer** — fills a fixed template and hands off to a ReportLab PDF.
+   Every figure in that PDF comes from the data, not from the prose.
 
-   Place names resolve against a **cached gazetteer**, built once from Nominatim
-   and committed to the repository. No geocoding call happens at request time — a
-   demo that reaches for the network is a demo that dies on conference wifi. A
-   place we do not have says so, and offers the ones we do.
-4. **Report writer** — fills six slots in a fixed template and hands off to a
-   ReportLab PDF. Every figure in that PDF comes from the data, not the prose.
+### Monitoring somewhere new
+
+Submit a point and a radius and the app measures it for real: persistent water
+bodies from JRC Global Surface Water, then three years of monthly Sentinel-2
+water area for each, then the same detector. **About two minutes**, and radius
+barely matters — the work is 36 sequential monthly requests whether the circle
+holds one water body or fifty.
+
+It reports progress by month while it runs, and it fails honestly: no water
+bodies found says why and suggests a wider radius, and a job killed by a restart
+is marked failed rather than left spinning. Results are written to Postgres and
+are queryable afterwards.
 
 ## Built for a wetlands officer, not a developer
 
@@ -259,6 +355,8 @@ LoopSatellite/
 ├── backend/
 │   ├── app/           FastAPI — reads precomputed/, never computes
 │   ├── data_pipeline/ OFFLINE satellite pipeline, steps 00–07
+│   │                  01a fetches real OSM boundaries; 03 and 06a run the
+│   │                  Earth Engine exports from Python, no Code Editor needed
 │   ├── precomputed/   the only thing the live app reads
 │   └── tests/
 ├── frontend/          React + Vite + MapLibre + Recharts
@@ -275,7 +373,8 @@ file that inherits it.
 ## Stack
 
 PostgreSQL (Neon, geometries as GeoJSON in JSONB — no PostGIS) · FastAPI ·
-SQLAlchemy + Alembic · OpenRouter via the OpenAI SDK · React + Vite + TypeScript ·
-MapLibre GL · Recharts · ReportLab · Google AI Studio (Gemini, via the OpenAI SDK) ·
-Earth Engine (personal OAuth token) +
-`geeup` + `statsmodels` + `pyproj` · Nominatim (build time only) · Render + Vercel.
+SQLAlchemy + Alembic · Clerk (JWT verified against its JWKS) · Google AI Studio
+(Gemini, through the OpenAI SDK's compatibility layer) · React + Vite +
+TypeScript · MapLibre GL · Recharts · ReportLab · Earth Engine (personal OAuth
+token) + `statsmodels` + `pyproj` · OpenStreetMap Overpass and Nominatim (build
+time only) · Render + Vercel.
