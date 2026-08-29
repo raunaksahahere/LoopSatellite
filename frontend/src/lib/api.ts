@@ -146,6 +146,10 @@ export const api = {
 
   area: (id: string) => request<Area>(`/api/areas/${encodeURIComponent(id)}`),
 
+  /** The water bodies a submitted area measured, shaped like /api/ponds. */
+  areaWaterbodies: (id: string) =>
+    request<PondCollection>(`/api/areas/${encodeURIComponent(id)}/waterbodies`),
+
   submitArea: (body: {
     name: string
     lat: number

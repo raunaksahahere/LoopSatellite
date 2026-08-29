@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { AreaStatusCard } from '../components/areas/AreaStatusCard'
@@ -9,7 +9,7 @@ import { MapView } from '../components/map/MapView'
 import type { Circle } from '../components/map/MapView'
 import { ErrorState, Loading } from '../components/ui'
 import { api } from '../lib/api'
-import type { NLQueryResponse } from '../lib/types'
+import type { NLQueryResponse, PondCollection } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
 
 type Mode = 'ask' | 'monitor'
@@ -34,12 +34,50 @@ export function DashboardPage() {
   const [queryResult, setQueryResult] = useState<NLQueryResponse | null>(null)
   const [selection, setSelection] = useState<RadiusSelection | null>(null)
   const [submittedAreaId, setSubmittedAreaId] = useState<string | null>(null)
+  const [areaPonds, setAreaPonds] = useState<PondCollection | null>(null)
+  // Bumped when a job reaches a terminal state, to re-fetch what it measured.
+  const [areaVersion, setAreaVersion] = useState(0)
   const { data, loading, error, reload } = useAsync(() => api.ponds(), [])
+
+  // Water bodies a submitted area measured.
+  //
+  // The base map is the precomputed bundle and only that, so an area could
+  // finish, report "2 water bodies · 4 unexplained water losses", and draw
+  // nothing — leaving the result on a card next to a map that disagreed with it.
+  // These are merged into the same layer so they colour by confidence like
+  // everything else.
+  useEffect(() => {
+    if (!submittedAreaId) {
+      setAreaPonds(null)
+      return
+    }
+    let cancelled = false
+    api
+      .areaWaterbodies(submittedAreaId)
+      .then((fc) => {
+        if (!cancelled) setAreaPonds(fc.features.length ? fc : null)
+      })
+      .catch(() => {
+        // Not fatal: the card still reports the result. Nothing to say here.
+        if (!cancelled) setAreaPonds(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [submittedAreaId, areaVersion])
 
   const highlighted = useMemo(
     () => (queryResult ? [...new Set(queryResult.results.map((r) => r.pond_id))] : undefined),
     [queryResult],
   )
+
+  // One collection for the map: the bundle, plus anything a submitted area
+  // measured. Same shape, same properties, so one layer renders both.
+  const mapPonds: PondCollection | null = useMemo(() => {
+    if (!data) return null
+    if (!areaPonds) return data
+    return { ...data, features: [...data.features, ...areaPonds.features] }
+  }, [data, areaPonds])
 
   // One circle overlay, from whichever mode is driving.
   const circle: Circle | null = useMemo(() => {
@@ -76,7 +114,7 @@ export function DashboardPage() {
     <div className="mapshell">
       <div className="maparea">
         <MapView
-          ponds={data}
+          ponds={mapPonds ?? data}
           highlighted={highlighted}
           onSelect={(pondId) => navigate(`/pond/${pondId}`)}
           circle={circle}
@@ -132,6 +170,9 @@ export function DashboardPage() {
                 onDone={() => {
                   setSelection(null)
                   reload()
+                  // The job only just wrote its water bodies; fetch them again
+                  // now there is something to fetch.
+                  setAreaVersion((n) => n + 1)
                 }}
               />
             )}

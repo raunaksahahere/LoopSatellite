@@ -117,6 +117,19 @@ async def capability(principal: Principal | None = WritableSession) -> dict[str,
     }
 
 
+@router.get(
+    "/{area_id}/waterbodies",
+    summary="The water bodies this area measured, as GeoJSON for the map",
+)
+async def area_waterbodies(area_id: str) -> dict[str, Any]:
+    """Empty until the area is ready. Never an error — the map asks for this the
+    moment an area appears and should not have to guess when it is safe to."""
+    try:
+        return await areas.waterbodies(area_id)
+    except areas.AreasUnavailable as exc:
+        raise _unavailable(exc) from exc
+
+
 @router.get("/{area_id}", response_model=AreaOut, summary="Progress on one area")
 async def get_area(area_id: str) -> dict[str, Any]:
     try:

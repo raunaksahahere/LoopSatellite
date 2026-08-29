@@ -232,3 +232,63 @@ def to_dict(area: Area) -> dict[str, Any]:
         "headline": headline(area),
         "eta_note": eta_note(area),
     }
+
+
+async def waterbodies(area_id: str) -> dict[str, Any]:
+    """The water bodies a finished area measured, as GeoJSON.
+
+    The map draws `precomputed/ponds.geojson`, which is the offline bundle and
+    nothing else. Everything the slow path measures is written to Postgres and
+    was never read back, so an area could finish, report "2 water bodies · 4
+    unexplained water losses", and put nothing on the map — the one place the
+    result means anything.
+
+    Shaped exactly like `/api/ponds` so the same layer can render it: same
+    properties, same `anomaly_count` and `worst_confidence_band` that drive the
+    colour.
+    """
+    _require_db()
+
+    from sqlalchemy.orm import selectinload
+
+    from app.models import Anomaly, Pond
+
+    prefix = area_id.replace("area_", "")
+    async with get_sessionmaker()() as session:
+        result = await session.execute(
+            select(Pond)
+            .where(Pond.id.like(f"{prefix}\\_%", escape="\\"))
+            .options(selectinload(Pond.anomalies))
+        )
+        ponds = result.scalars().unique().all()
+
+    def worst(items: list[Anomaly]) -> str | None:
+        for band in ("high", "medium", "low"):
+            if any(a.confidence_band == band for a in items):
+                return band
+        return None
+
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": pond.geojson,
+                "properties": {
+                    "id": pond.id,
+                    "name": pond.name,
+                    "ward": pond.ward,
+                    "mouza": pond.mouza,
+                    "centroid_lat": pond.centroid_lat,
+                    "centroid_lon": pond.centroid_lon,
+                    "baseline_area_m2": pond.baseline_area_m2,
+                    "anomaly_count": len(pond.anomalies),
+                    "worst_confidence_band": worst(list(pond.anomalies)),
+                    # So the UI can say these came from a submitted area rather
+                    # than from the measured bundle the rest of the map shows.
+                    "source": "submitted-area",
+                },
+            }
+            for pond in ponds
+        ],
+    }

@@ -318,3 +318,28 @@ def test_a_finished_job_is_never_reaped():
         )
         area.created_at = area.updated_at = datetime.now(UTC) - timedelta(days=2)
         assert _reap_if_stale(area).status == status
+
+
+# ---------------------------------------------------------------------------
+# What an area measured has to reach the map
+# ---------------------------------------------------------------------------
+def test_the_waterbodies_route_exists_and_is_protected():
+    """Regression. An area could finish, report "2 water bodies · 4 unexplained
+    water losses", and draw nothing — the map reads the precomputed bundle and
+    only that, so everything the slow path measured was invisible."""
+    from app.main import app
+
+    paths = app.openapi()["paths"]
+    assert "/api/areas/{area_id}/waterbodies" in paths
+
+
+def test_area_waterbodies_are_shaped_like_the_pond_layer():
+    """The map renders one layer. If these features do not carry the properties
+    that layer colours by, they land on the map grey and unclickable."""
+    import inspect
+
+    from app.services import areas
+
+    source = inspect.getsource(areas.waterbodies)
+    for prop in ("anomaly_count", "worst_confidence_band", "centroid_lat", "baseline_area_m2"):
+        assert prop in source, f"{prop} drives the pond layer and must be present"
