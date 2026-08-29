@@ -22,6 +22,8 @@ import { api } from '../lib/api'
 import { describeWindow, formatArea, formatHectares, formatPercent } from '../lib/format'
 import type { Health } from '../lib/types'
 import { useAsync } from '../lib/useAsync'
+import { CaseStatus } from '../components/report/CaseStatus'
+import { EvidenceStrength } from '../components/report/EvidenceStrength'
 
 /**
  * One pond, end to end: the measurement, the flagged events, why they were
@@ -135,6 +137,9 @@ export function PondDetailPage({ health }: { health: Health | null }) {
                 />
                 <Stat label="Recovered" value={active!.recovered ? 'Yes' : 'No'} />
               </div>
+
+              <EvidenceStrength anomaly={active!} />
+              <CaseStatus verifications={detail.data.verifications} />
 
               <p>{detail.data.detection.summary}</p>
               <ul className="reasons">

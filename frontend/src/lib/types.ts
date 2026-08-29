@@ -53,6 +53,9 @@ export interface Anomaly {
   recovered: boolean
   persistence_months: number | null
   data_quality: number | null
+  /** Clear satellite passes behind the flagged window. 0 means it is all interpolated. */
+  clear_passes?: number | null
+  months_interpolated?: number | null
   conversion_signal: ConversionSignal | null
   conversion_label: string | null
   status: string

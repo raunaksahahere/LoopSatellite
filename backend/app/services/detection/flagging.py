@@ -163,6 +163,11 @@ def analyse_pond(payload: dict) -> tuple[list[dict], dict]:
     months = [p["month"] for p in series]
     values = np.array([float(p["water_area_m2"]) for p in series], dtype=float)
     quality = np.array([float(p["quality_weight"]) for p in series], dtype=float)
+    # How many clear satellite passes each month rested on. Not used to decide
+    # anything — the detector already weights by quality — but carried onto the
+    # finding so an officer can see whether a 72% loss came from five passes or
+    # from one interpolated month.
+    scenes = np.array([int(p.get("n_scenes") or 0) for p in series], dtype=int)
 
     flagged, decomp = seasonal_hybrid_esd(values)
     expected = expected_series(values, decomp["seasonal"])
@@ -210,6 +215,10 @@ def analyse_pond(payload: dict) -> tuple[list[dict], dict]:
                 "recovered": recovered,
                 "persistence_months": len(group),
                 "data_quality": round(window_quality, 3),
+                "clear_passes": int(scenes[group[0] : end + 1].sum()),
+                "months_interpolated": int(
+                    sum(1 for i in range(group[0], end + 1) if scenes[i] == 0)
+                ),
                 "flagged_months": [months[i] for i in group],
             }
         )

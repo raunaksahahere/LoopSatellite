@@ -665,3 +665,64 @@ input[type='range'] { accent-color: var(--accent); }
   border: 0;
   background: transparent;
 }
+
+/* --- evidence strength and case status -------------------------------------
+   Both sit directly under the headline numbers on a finding. They are quiet by
+   default: the point is that the numbers stop being bare, not that a new box
+   competes with them. `--weak` is the exception and is meant to be noticed. */
+.evidence {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--line);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.evidence--weak { border-left-color: var(--medium); background: var(--medium-soft); }
+
+.evidence__line {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.evidence__line strong { text-transform: capitalize; }
+
+.evidence__note {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.casestatus {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+}
+
+.casestatus--confirmed { border-left-color: var(--high); background: var(--high-soft); }
+.casestatus--seasonal { border-left-color: var(--low); background: var(--low-soft); }
+.casestatus--unclear { border-left-color: var(--medium); background: var(--medium-soft); }
+
+.casestatus__state {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.casestatus__next {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.casestatus__history {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}

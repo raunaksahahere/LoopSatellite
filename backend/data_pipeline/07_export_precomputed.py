@@ -81,12 +81,19 @@ def export_timeseries() -> dict[str, dict]:
             continue
         decomp = read_json(decomp_path)
 
+        # How many clear satellite passes stood behind each month, and how much
+        # of the pond was visible in them. Step 04 has always computed both; they
+        # were dropped here, so the UI could show a loss percentage with no way
+        # to say how well observed it was.
+        by_month = {row["month"]: row for row in series["series"]}
         points = [
             {
                 "month": month,
                 "observed_m2": observed,
                 "expected_m2": expected,
                 "interpolated": interpolated,
+                "n_scenes": by_month.get(month, {}).get("n_scenes", 0),
+                "quality_weight": by_month.get(month, {}).get("quality_weight"),
             }
             for month, observed, expected, interpolated in zip(
                 decomp["months"],
