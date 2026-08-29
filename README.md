@@ -235,11 +235,14 @@ what is on screen right now, and what would produce it for real. The statuses ar
 declared in the code that serves the page and the evidence is read from disk, so
 a bundle cannot flatter itself.
 
-**Eight of ten layers are real:** the application, the basemap, place names, the
-legal corpus, pond boundaries, water measurements, the detector, and the spectral
-verdict. The two that are not say so — the before/after chips are scale diagrams
-of measured extent rather than photographs, and the live "monitor a new area"
-path is listed as what it is.
+**Nine of ten layers are real:** the application, the basemap, place names, the
+legal corpus, pond boundaries, water measurements, the detector, the spectral
+verdict, and the live "monitor a new area" pipeline — which reports how many
+water bodies it has actually measured on this deployment, so the status follows
+the evidence rather than a sentence somebody wrote once.
+
+The one that is not says so: the before/after chips are scale diagrams of
+measured extent, labelled as diagrams on their face, not photographs.
 
 **Reproducing the bundle from scratch**, with Earth Engine credentials and a
 registered Cloud project:

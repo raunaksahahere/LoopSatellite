@@ -49,8 +49,36 @@ def _fallback_reason(manifest: dict[str, Any], step: str) -> str | None:
     return None
 
 
+async def _areas_processed() -> tuple[int, int]:
+    """(areas measured, water bodies measured) — evidence, not a claim.
+
+    The live path's status is read from what it has actually done, the same way
+    every other layer's is read from the manifest. A database that is absent or
+    unreachable means no evidence, which reads as not-run rather than as an error
+    on a page whose entire job is to be trustworthy.
+    """
+    if not settings.db_configured:
+        return 0, 0
+    try:
+        from sqlalchemy import func, select
+
+        from app.core.database import get_sessionmaker
+        from app.models import Area
+
+        async with get_sessionmaker()() as session:
+            row = await session.execute(
+                select(func.count(), func.coalesce(func.sum(Area.pond_count), 0)).where(
+                    Area.status == "ready", Area.pond_count > 0
+                )
+            )
+            areas, bodies = row.one()
+            return int(areas or 0), int(bodies or 0)
+    except Exception:  # noqa: BLE001 - a provenance page must render regardless
+        return 0, 0
+
+
 @router.get("", summary="What is real, what is synthetic, and what would replace it")
-def provenance() -> dict[str, Any]:
+async def provenance() -> dict[str, Any]:
     manifest = repository.manifest()
     ponds = repository.ponds()
     anomalies = repository.anomalies()
@@ -62,6 +90,7 @@ def provenance() -> dict[str, Any]:
 
     legal_documents = store.documents()
     ee = gee_status()
+    areas_done, bodies_done = await _areas_processed()
 
     layers = [
         {
@@ -227,31 +256,50 @@ def provenance() -> dict[str, Any]:
         {
             "key": "live_area_processing",
             "label": "Monitoring a brand-new area",
-            "status": NOT_RUN,
+            "status": REAL if areas_done else NOT_RUN,
             "on_screen": (
-                "Nothing. Submitting an area is accepted and then fails honestly: "
-                + (ee["error"] or "Earth Engine is not configured on this server.")
-                if not ee["initialised"]
-                else "Earth Engine is connected, but no area has been processed here yet."
+                f"{bodies_done} water bodies across {areas_done} submitted "
+                f"{'area' if areas_done == 1 else 'areas'}, measured on this "
+                f"deployment and drawn on the map alongside the bundle."
+                if areas_done
+                else (
+                    "Nothing yet. Submitting an area is accepted and then fails honestly: "
+                    + (ee["error"] or "Earth Engine is not configured on this server.")
+                    if not ee["initialised"]
+                    else "Earth Engine is connected, but no area has been processed here yet."
+                )
             ),
             "real_source": (
                 "services/area_processing.py — JRC Global Surface Water for the water "
-                "bodies, then Sentinel-2 MNDWI, then the same detector"
+                "bodies, then three years of Sentinel-2 MNDWI, then the same detector"
             ),
             "detail": (
-                "The orchestration, the status lifecycle and the failure paths are tested "
-                "with Earth Engine mocked. The Earth Engine calls themselves have never "
-                "been run against live GEE. This path deliberately does NOT fall back to "
-                "synthetic data — a real request for a new area must never be answered "
-                "with invented results."
+                "Really run, against live Earth Engine, on this deployment. Water bodies "
+                "come from JRC Global Surface Water occurrence; each one is then measured "
+                "monthly for three years and passed through the same detector as the "
+                "offline bundle. Roughly two minutes, and the radius barely matters — the "
+                "work is one request per month either way. This path deliberately does "
+                "NOT fall back to synthetic data: a real request for a new area must "
+                "never be answered with invented results, so it fails and says why."
+                if areas_done
+                else "The orchestration, the status lifecycle and the failure paths are "
+                "tested with Earth Engine mocked. This path deliberately does NOT fall "
+                "back to synthetic data — a real request for a new area must never be "
+                "answered with invented results."
             ),
         },
     ]
 
     return {
         "headline": (
-            "The application, the detector and the law are real. The measurements are "
-            "not, and every layer says which it is."
+            "Every measurement on this page is real: OpenStreetMap boundaries, "
+            "Sentinel-2 water surface, measured spectral indices, and a detector that "
+            "has never seen a language model. The comparison images are diagrams "
+            "rather than photographs, and that is the one thing here that is drawn "
+            "instead of measured."
+            if not manifest.get("is_synthetic")
+            else "The application, the detector and the law are real. The measurements "
+            "are not, and every layer says which it is."
         ),
         "bundle_is_synthetic": bool(manifest.get("is_synthetic")),
         "generated_at": manifest.get("generated_at"),

@@ -51,14 +51,51 @@ def test_the_law_is_declared_real_because_it_is(body):
     assert "1203(E)" in law["real_source"], "the gazette citation should be quoted"
 
 
-def test_the_live_area_pipeline_is_declared_not_run(body):
-    """It has never been run against live Earth Engine, and the page must say so
-    rather than implying the capability is proven."""
+def test_the_live_area_pipeline_reports_not_run_with_no_evidence(body):
+    """With no database there is nothing to prove the path has run, and the page
+    must not imply the capability is proven.
+
+    The suite runs with DATABASE_URL cleared, so this is the no-evidence case.
+    It used to assert the detail said "never been run", which was true when the
+    Earth Engine calls had never executed and became a lie the day they did —
+    the page has to follow the evidence, not a sentence written once.
+    """
     live = next(
         layer for layer in body["layers"] if layer["key"] == "live_area_processing"
     )
     assert live["status"] == "not_run"
-    assert "never been run" in live["detail"]
+    assert "0 water bodies" not in live["on_screen"]
+
+
+async def test_the_live_area_pipeline_reports_real_once_it_has_run(monkeypatch):
+    """The other half. A deployment that has actually measured areas must say so,
+    with the count, rather than under-claiming a capability it has proven."""
+    from app.api.routes import provenance as prov
+
+    async def two_areas():
+        return 2, 50
+
+    monkeypatch.setattr(prov, "_areas_processed", two_areas)
+    body = await prov.provenance()
+    live = next(
+        layer for layer in body["layers"] if layer["key"] == "live_area_processing"
+    )
+    assert live["status"] == "real"
+    assert "50 water bodies" in live["on_screen"]
+    assert "2 submitted areas" in live["on_screen"]
+    assert "never been run" not in live["detail"]
+
+
+def test_the_headline_does_not_call_real_measurements_invented(body):
+    """Regression. The headline said "the measurements are not [real]" and stayed
+    saying it after the bundle became entirely measured — the single most
+    prominent sentence on the page, and wrong."""
+    from app.services.detection import repository
+
+    if repository.manifest().get("is_synthetic"):
+        pytest.skip("this bundle is synthetic; the old headline is correct for it")
+    assert "measurements are" not in body["headline"]
+    assert "real" in body["headline"].lower()
 
 
 def test_measurement_status_matches_the_manifest(body):
