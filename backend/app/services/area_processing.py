@@ -26,6 +26,7 @@ do that run well before any demo, not during one.
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from app.core.gee_auth import EarthEngineUnavailable, initialize_earth_engine
@@ -183,16 +184,24 @@ def _gee_water_area_series(
         )
     )
 
-    end = ee.Date(ee.Date().format("YYYY-MM-01"))
+    # `ee.Date()` with no argument was meant as "now". It is not a thing the API
+    # has ever accepted, in Python or JavaScript, and this line threw
+    # TypeError: Date.__init__() missing 1 required positional argument on the
+    # first real submission this path ever received.
+    #
+    # The clock is ours anyway: taking the month boundary from Python keeps the
+    # window deterministic and testable instead of depending on a server-side
+    # round trip to find out what month it is.
+    first_of_this_month = datetime.now(UTC).date().replace(day=1)
+    end = ee.Date(first_of_this_month.isoformat())
     start = end.advance(-YEARS_OF_HISTORY * 12, "month")
 
     def add_mndwi(image):
         mndwi = image.normalizedDifference(["B3", "B11"]).rename("mNDWI")
         return image.addBands(mndwi.gte(MNDWI_THRESHOLD).rename("thres"))
 
-    months = ee.List.sequence(0, YEARS_OF_HISTORY * 12 - 1)
-
-    def monthly(offset):
+    def month_rows(offset: int) -> list[dict[str, Any]]:
+        """One month, one request. Returns [] if Earth Engine refused it."""
         m0 = start.advance(offset, "month")
         scenes = (
             ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
@@ -201,11 +210,32 @@ def _gee_water_area_series(
             .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", CLOUD_THRESHOLD))
             .map(add_mndwi)
         )
-        composite = scenes.select("thres").median().unmask(0).rename("water")
+        # A month with no clear pass is normal here — the monsoon closes the sky
+        # for weeks. `median()` over an empty collection returns an image with no
+        # bands at all, and `unmask(0)` then fails with "If one image has no
+        # bands, the other must also have no bands", killing the whole request
+        # rather than the one month. Substitute an explicit zero image instead,
+        # which is what `n_scenes == 0` already tells the caller to treat as
+        # interpolated.
+        composite = ee.Image(
+            ee.Algorithms.If(
+                scenes.size().gt(0),
+                scenes.select("thres").median().unmask(0),
+                ee.Image(0),
+            )
+        ).rename("water")
+        # setOutputs is not decoration. reduceRegions names its output column
+        # after the *band* only when the image has several; with a single band it
+        # names it after the reducer, so `f.get("water")` came back null and
+        # every month died on "Number.multiply: Parameter 'left' is required".
+        # Naming it explicitly makes the column independent of the band count.
         stats = composite.reduceRegions(
-            collection=collection, reducer=ee.Reducer.sum(), scale=10, crs="EPSG:32645"
+            collection=collection,
+            reducer=ee.Reducer.sum().setOutputs(["water"]),
+            scale=10,
+            crs="EPSG:32645",
         )
-        return stats.map(
+        table = stats.map(
             lambda f: ee.Feature(
                 None,
                 {
@@ -216,8 +246,31 @@ def _gee_water_area_series(
                 },
             )
         )
+        return table.getInfo().get("features", [])
 
-    rows = ee.FeatureCollection(months.map(monthly)).flatten().getInfo().get("features", [])
+    # One request per month, not one request mapped over every month.
+    #
+    # `ee.List.sequence(...).map(...)` builds every monthly aggregation into a
+    # single call, and Earth Engine's Community tier refuses it outright with
+    # "Too many concurrent aggregations" — so this path returned nothing at all
+    # for an area of any size. Walking the months costs more round trips and
+    # finishes; the offline pipeline reaches the same conclusion in
+    # data_pipeline/03_run_wsa_gee.py.
+    rows: list[dict[str, Any]] = []
+    failed = 0
+    for offset in range(YEARS_OF_HISTORY * 12):
+        try:
+            rows.extend(month_rows(offset))
+        except Exception as exc:  # noqa: BLE001 - one month must not lose the area
+            failed += 1
+            logger.warning("month %+d of the window failed: %s", offset, exc)
+    if failed:
+        logger.warning("%d of %d months failed", failed, YEARS_OF_HISTORY * 12)
+    if not rows:
+        raise EarthEngineUnavailable(
+            "Earth Engine returned no measurements for this area. It may be rate "
+            "limiting; try again in a few minutes."
+        )
 
     series: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
