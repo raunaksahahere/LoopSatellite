@@ -555,66 +555,126 @@ input[type='range'] { accent-color: var(--accent); }
 /* -------------------------------------------------------------- front door */
 /* One way in, two doors. Deep water at night — deliberately unlike the app
    shell, so signing in reads as entering rather than as another screen. */
+/* --- the front door -------------------------------------------------------
+   One column on the gradient, not a stack of boxes. It was three deep — dark
+   panel, white wrapper, Clerk's own card — and 420px wide, which is narrower
+   than Clerk's form needs once two layers of padding are subtracted, so the
+   sign-up fields were clipped off the right edge.
+
+   Now the masthead sits directly on the background and the Clerk card is the
+   only card on screen. The column is sized from the form outward rather than
+   the form squeezed into the column. */
 .frontdoor {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 2rem 1rem;
+  padding: clamp(1.5rem, 5vw, 4rem) 1.25rem;
   background:
     radial-gradient(120% 90% at 50% 0%, #14403e 0%, #0a1f1e 55%, #060f0f 100%);
+  color-scheme: dark;
 }
 
-.frontdoor__panel {
+.frontdoor__col {
   width: 100%;
-  max-width: 420px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.8rem 1.6rem;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+  /* Clerk's form is ~400px of content; anything tighter clips it. */
+  max-width: 27.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
+
+.frontdoor__masthead { text-align: left; }
 
 .frontdoor__kicker {
   margin: 0;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4ec3bd;
 }
-.frontdoor__title { margin: 0.35rem 0 0; font-size: 1.9rem; letter-spacing: -0.03em; }
-.frontdoor__purpose { margin: 0.5rem 0 0; color: var(--ink-2); font-size: 0.95rem; }
 
-.frontdoor__form { margin-top: 1.4rem; }
-
-.frontdoor__demo {
-  width: 100%;
-  min-height: var(--tap);
-  margin-top: 0.7rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink-2);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
+.frontdoor__title {
+  margin: 0.5rem 0 0;
+  font-size: clamp(2rem, 6vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: #f4f8f7;
 }
-.frontdoor__demo:hover { background: var(--surface-2); color: var(--ink); }
-.frontdoor__demo:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-.frontdoor__note {
+.frontdoor__purpose {
   margin: 0.7rem 0 0;
-  font-size: 0.85rem;
-  color: var(--ink-3);
-  line-height: 1.45;
+  max-width: 34ch;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #a9bdb9;
 }
+
+/* Segmented control, on the gradient rather than inside a card. */
+.frontdoor__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.frontdoor__tabs button {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #a9bdb9;
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background-color 120ms linear, color 120ms linear;
+}
+
+.frontdoor__tabs button:hover { color: #f4f8f7; }
+
+.frontdoor__tabs button.is-active {
+  background: #f7fbfa;
+  color: #0d2523;
+  font-weight: 600;
+}
+
+.frontdoor__tabs button:focus-visible {
+  outline: 2px solid #4ec3bd;
+  outline-offset: 2px;
+}
+
+/* The only card. Clerk paints its own padding, so this adds none horizontally —
+   that double padding is what clipped the form. */
+.frontdoor__clerk {
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  color-scheme: light;
+}
+
+.frontdoor__clerk .cl-rootBox,
+.frontdoor__clerk .cl-card {
+  width: 100%;
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}
+
+.frontdoor__clerk .cl-footer { background: transparent; }
+
+.frontdoor__note { color: #a9bdb9; }
 
 .frontdoor__aside {
-  display: inline-block;
-  margin-top: 1.3rem;
-  font-size: 0.85rem;
-  color: var(--accent);
+  align-self: flex-start;
+  color: #4ec3bd;
+  font-size: 0.88rem;
   text-decoration: none;
 }
+
 .frontdoor__aside:hover { text-decoration: underline; }
 
 /* --- sign-in door: Clerk tabs ---------------------------------------------

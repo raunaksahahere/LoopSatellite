@@ -68,7 +68,7 @@ export function WelcomePage() {
   if (status === 'loading') {
     return (
       <main className="frontdoor">
-        <div className="frontdoor__panel">
+        <div className="frontdoor__col">
           <Loading label="Checking your session" rows={2} />
         </div>
       </main>
@@ -79,16 +79,19 @@ export function WelcomePage() {
 
   return (
     <main className="frontdoor">
-      <div className="frontdoor__panel">
-        <p className="frontdoor__kicker">LOOP ERRORS · SP-01</p>
-        <h1 className="frontdoor__title">LoopSatellite</h1>
-        <p className="frontdoor__purpose">
-          Telling the difference between a wetland pond that shrank because it's
-          April and one that shrank because someone filled it in.
-        </p>
+      <div className="frontdoor__col">
+        <header className="frontdoor__masthead">
+          <p className="frontdoor__kicker">LOOP ERRORS · SP-01</p>
+          <h1 className="frontdoor__title">LoopSatellite</h1>
+          <p className="frontdoor__purpose">
+            Telling the difference between a wetland pond that shrank because
+            it's April and one that shrank because someone filled it in.
+          </p>
+        </header>
 
         {!authConfigured ? (
           <Note tone="warn">
+            {/* On the gradient now, not inside a light panel. */}
             Sign-in is not configured on this deployment, so the API is running
             open. Set <code>VITE_CLERK_PUBLISHABLE_KEY</code> here and{' '}
             <code>CLERK_ISSUER</code> on the API to switch it on.
