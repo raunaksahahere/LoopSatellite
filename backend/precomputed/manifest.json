@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-28T18:56:41+00:00",
+ "generated_at": "2026-08-29T03:46:22+00:00",
  "study_area": "East Kolkata Wetlands, West Bengal (Ramsar site 1208)",
  "pond_count": 160,
  "anomaly_count": 414,
@@ -7,15 +7,10 @@
   "openstreetmap"
  ],
  "conversion_source": [
-  "synthetic-demo"
+  "sentinel2-ndbi-bsi"
  ],
- "is_synthetic": true,
- "fallbacks": [
-  {
-   "step": "06_built_up_classifier",
-   "reason": "no NDBI/BSI export in work/gee_exports: see the companion snippet in 06_built_up_classifier.py"
-  }
- ],
+ "is_synthetic": false,
+ "fallbacks": [],
  "detection": {
   "water_index": "MNDWI (green-SWIR)/(green+SWIR)",
   "mndwi_threshold": 0.1,

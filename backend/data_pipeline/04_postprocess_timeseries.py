@@ -164,7 +164,12 @@ def load_capacities() -> dict[str, float]:
 
 def load_scenes(capacities: dict[str, float]) -> dict[str, list[dict]]:
     """Read every export CSV, quality-filter, and bucket scenes by pond."""
-    csvs = sorted(EXPORTS_DIR.glob("*.csv"))
+    # `builtup_*.csv` lives in the same directory and is a different schema
+    # entirely — step 06's NDBI/BSI export, keyed on (pond, window) rather than
+    # on a scene. Globbing *.csv swallowed it and died on a missing "area"
+    # column. It never surfaced before because that file only ever existed as a
+    # snippet in a docstring; 06a_export_spectral.py now really writes it.
+    csvs = [p for p in sorted(EXPORTS_DIR.glob("*.csv")) if not p.name.startswith("builtup_")]
     if not csvs:
         raise SystemExit(
             f"No CSVs in {EXPORTS_DIR}.\n"
@@ -176,7 +181,15 @@ def load_scenes(capacities: dict[str, float]) -> dict[str, list[dict]]:
     dropped = kept = unknown = 0
     for path in csvs:
         with path.open(newline="", encoding="utf-8") as fh:
-            for row in csv.DictReader(fh):
+            reader = csv.DictReader(fh)
+            missing = {"UNIQUEID", "area", "system_time_utc"} - set(reader.fieldnames or [])
+            if missing:
+                raise SystemExit(
+                    f"{path.name} is not a water-area export: missing "
+                    f"{', '.join(sorted(missing))}. Only scene exports belong in "
+                    f"{EXPORTS_DIR}."
+                )
+            for row in reader:
                 pond_id = row["UNIQUEID"]
                 capacity = capacities.get(pond_id)
                 if capacity is None:

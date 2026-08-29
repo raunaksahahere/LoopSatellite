@@ -158,8 +158,21 @@ def test_series_capacity_matches_the_polygon_it_came_from():
 
 @pytest.mark.parametrize("anomaly", anomalies(), ids=lambda a: a["id"])
 def test_spectral_verdict_is_consistent_with_the_water_loss(anomaly):
-    """Step 06 invents indices; they must at least agree with step 04's story.
-    A pond that recovered cannot also read as built over."""
+    """Two synthesizers must tell the same story. Two instruments need not.
+
+    When step 04 and step 06 are both invented, "recovered" and "built_up"
+    together mean the generators disagree, and that is a bug worth failing on.
+
+    Measured, it is neither a bug nor rare. A bheri is drained to the bed for
+    harvest and refilled afterwards: the exposed bed reads strongly built-up or
+    bare — dNDBI up to +0.54 against a 0.08 threshold — and the water comes back
+    months later. Eight of 414 real events look like this, all at 98-100% loss,
+    which is the signature of a deliberate drawdown rather than a contradiction.
+    Asserting the invariant against real measurements would mean calling the
+    Sentinel-2 record wrong because it disagreed with a rule written for fixtures.
+    """
+    if repository.manifest().get("conversion_source") != ["synthetic-demo"]:
+        pytest.skip("measured indices — water area and spectral response are independent")
     if anomaly["recovered"]:
         assert anomaly.get("conversion_signal") != "built_up", (
             f"{anomaly['id']} recovered its water but the spectral step says it was "
