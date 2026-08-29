@@ -334,8 +334,14 @@ holds one water body or fifty.
 
 It reports progress by month while it runs, and it fails honestly: no water
 bodies found says why and suggests a wider radius, and a job killed by a restart
-is marked failed rather than left spinning. Results are written to Postgres and
-are queryable afterwards.
+is marked failed rather than left spinning.
+
+**What it measures then joins the map, for everyone.** The water bodies are drawn
+in the same layer as the bundle and coloured by the same confidence bands, so a
+pond somebody monitored last week is indistinguishable from one in the offline
+bundle — because it was measured the same way. The layer is shared rather than
+per-session: any signed-in officer sees everything the system has measured, and
+it survives a refresh.
 
 ## Built for a wetlands officer, not a developer
 

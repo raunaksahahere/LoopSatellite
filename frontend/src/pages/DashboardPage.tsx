@@ -35,36 +35,36 @@ export function DashboardPage() {
   const [selection, setSelection] = useState<RadiusSelection | null>(null)
   const [submittedAreaId, setSubmittedAreaId] = useState<string | null>(null)
   const [areaPonds, setAreaPonds] = useState<PondCollection | null>(null)
-  // Bumped when a job reaches a terminal state, to re-fetch what it measured.
+  // Bumped when a job finishes, to pick up what it just measured.
   const [areaVersion, setAreaVersion] = useState(0)
   const { data, loading, error, reload } = useAsync(() => api.ponds(), [])
 
-  // Water bodies a submitted area measured.
+  // Everything every finished area has measured.
   //
   // The base map is the precomputed bundle and only that, so an area could
   // finish, report "2 water bodies · 4 unexplained water losses", and draw
   // nothing — leaving the result on a card next to a map that disagreed with it.
-  // These are merged into the same layer so they colour by confidence like
-  // everything else.
+  //
+  // Fetched for everyone rather than for the tab that submitted it: any signed-in
+  // officer sees what the system has measured, and it survives a refresh. Merged
+  // into the same collection, so these colour by confidence like every other
+  // pond, because they are measured the same way.
   useEffect(() => {
-    if (!submittedAreaId) {
-      setAreaPonds(null)
-      return
-    }
     let cancelled = false
     api
-      .areaWaterbodies(submittedAreaId)
+      .monitoredWaterbodies()
       .then((fc) => {
         if (!cancelled) setAreaPonds(fc.features.length ? fc : null)
       })
       .catch(() => {
-        // Not fatal: the card still reports the result. Nothing to say here.
+        // Not fatal — the bundle still draws, and a submitted area still reports
+        // its result on its own card. Nothing useful to say on the map.
         if (!cancelled) setAreaPonds(null)
       })
     return () => {
       cancelled = true
     }
-  }, [submittedAreaId, areaVersion])
+  }, [areaVersion])
 
   const highlighted = useMemo(
     () => (queryResult ? [...new Set(queryResult.results.map((r) => r.pond_id))] : undefined),
@@ -170,8 +170,8 @@ export function DashboardPage() {
                 onDone={() => {
                   setSelection(null)
                   reload()
-                  // The job only just wrote its water bodies; fetch them again
-                  // now there is something to fetch.
+                  // The job only just wrote its water bodies; re-fetch the
+                  // shared layer now there is something new in it.
                   setAreaVersion((n) => n + 1)
                 }}
               />

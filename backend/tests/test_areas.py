@@ -323,7 +323,7 @@ def test_a_finished_job_is_never_reaped():
 # ---------------------------------------------------------------------------
 # What an area measured has to reach the map
 # ---------------------------------------------------------------------------
-def test_the_waterbodies_route_exists_and_is_protected():
+def test_the_waterbodies_routes_exist():
     """Regression. An area could finish, report "2 water bodies · 4 unexplained
     water losses", and draw nothing — the map reads the precomputed bundle and
     only that, so everything the slow path measured was invisible."""
@@ -331,6 +331,31 @@ def test_the_waterbodies_route_exists_and_is_protected():
 
     paths = app.openapi()["paths"]
     assert "/api/areas/{area_id}/waterbodies" in paths
+    assert "/api/areas/waterbodies" in paths, "the shared layer the map draws"
+
+
+def test_the_shared_layer_is_declared_before_the_id_route():
+    """`/waterbodies` and `/{area_id}` both match the same URL. FastAPI takes the
+    first registered, so the literal path has to come first or the shared layer
+    is served as an area whose id is the word "waterbodies"."""
+    import inspect
+
+    from app.api.routes import areas as routes
+
+    source = inspect.getsource(routes)
+    assert source.index('"/waterbodies"') < source.index('"/{area_id}/waterbodies"')
+
+
+def test_the_shared_layer_excludes_the_seeded_bundle():
+    """`pond` holds the seeded EKW ponds as well as everything areas measure.
+    Selecting the table wholesale would draw the bundle's 160 ponds a second
+    time, on top of the ones the map already reads from precomputed/."""
+    import inspect
+
+    from app.services import areas
+
+    source = inspect.getsource(areas.all_waterbodies)
+    assert "AreaModel" in source, "must be driven from the area table, not from pond"
 
 
 def test_area_waterbodies_are_shaped_like_the_pond_layer():

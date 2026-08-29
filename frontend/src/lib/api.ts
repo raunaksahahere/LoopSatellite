@@ -146,9 +146,18 @@ export const api = {
 
   area: (id: string) => request<Area>(`/api/areas/${encodeURIComponent(id)}`),
 
-  /** The water bodies a submitted area measured, shaped like /api/ponds. */
+  /** The water bodies one submitted area measured, shaped like /api/ponds. */
   areaWaterbodies: (id: string) =>
     request<PondCollection>(`/api/areas/${encodeURIComponent(id)}/waterbodies`),
+
+  /**
+   * Every water body every finished area has measured.
+   *
+   * Shared across accounts on purpose: the map shows what the system has
+   * measured, not what this tab happened to start. It also survives a refresh,
+   * which the per-tab version did not.
+   */
+  monitoredWaterbodies: () => request<PondCollection>('/api/areas/waterbodies'),
 
   submitArea: (body: {
     name: string

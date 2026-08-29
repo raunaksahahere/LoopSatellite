@@ -234,6 +234,43 @@ def to_dict(area: Area) -> dict[str, Any]:
     }
 
 
+async def all_waterbodies() -> dict[str, Any]:
+    """Every water body every finished area has measured, as one GeoJSON layer.
+
+    Shared on purpose: any signed-in officer sees everything the system has
+    measured so far, not only what their own browser tab started. The map then
+    accumulates work rather than resetting on every refresh.
+
+    Driven from the `area` table rather than from `pond`, because `pond` also
+    holds the seeded East Kolkata Wetlands bundle — selecting everything in it
+    would draw those 160 ponds a second time, on top of the ones the map already
+    reads from precomputed/.
+    """
+    _require_db()
+
+    from app.models import Area as AreaModel
+
+    async with get_sessionmaker()() as session:
+        rows = await session.execute(
+            select(AreaModel.id).where(AreaModel.status == "ready", AreaModel.pond_count > 0)
+        )
+        area_ids = [r[0] for r in rows.all()]
+
+    if not area_ids:
+        return {"type": "FeatureCollection", "features": []}
+
+    features: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for area_id in area_ids:
+        for feature in (await waterbodies(area_id))["features"]:
+            pond_id = feature["properties"]["id"]
+            if pond_id in seen:
+                continue
+            seen.add(pond_id)
+            features.append(feature)
+    return {"type": "FeatureCollection", "features": features}
+
+
 async def waterbodies(area_id: str) -> dict[str, Any]:
     """The water bodies a finished area measured, as GeoJSON.
 

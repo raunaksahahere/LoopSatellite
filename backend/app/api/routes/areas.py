@@ -118,6 +118,22 @@ async def capability(principal: Principal | None = WritableSession) -> dict[str,
 
 
 @router.get(
+    "/waterbodies",
+    summary="Every water body every finished area has measured, for the map",
+)
+async def all_area_waterbodies() -> dict[str, Any]:
+    """Declared before `/{area_id}` so the literal path wins the match.
+
+    Shared across accounts by design: the map shows everything the system has
+    measured, not only what this browser tab started.
+    """
+    try:
+        return await areas.all_waterbodies()
+    except areas.AreasUnavailable as exc:
+        raise _unavailable(exc) from exc
+
+
+@router.get(
     "/{area_id}/waterbodies",
     summary="The water bodies this area measured, as GeoJSON for the map",
 )
